@@ -1,4 +1,11 @@
 import powerbi from "powerbi-visuals-api";
+
+export const enum ValidatorType {
+    Min = 0,
+    Max = 1,
+    Required = 2,
+}
+
 export interface ValidationNumericInfo {
     decimal?: boolean;
     integer?: boolean;
@@ -14,3 +21,14 @@ export interface FormattingSettingsSlice {
     placeholder?: string;
 }
 
+export interface FormattingSettingsCard {
+    slices: FormattingSettingsSlices
+}
+
+export interface FormattingSettingsSlices {
+    [propertyName: string]: FormattingSettingsSlice
+}
+
+export interface FormattingSettingsCards {
+    [objectName: string]: FormattingSettingsCard
+}

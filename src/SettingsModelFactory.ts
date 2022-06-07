@@ -1,27 +1,33 @@
-
 import powerbi from "powerbi-visuals-api"
 import { parseFormattingSettingsSlice, getPropertyValue } from "./SettingsParser"
+import { FormattingSettingsCards } from "./SettingsInterfaces"
 import visuals = powerbi.visuals;
 
 export class FormattingSettingsModel {
+
+    cards: FormattingSettingsCards;
 
     public populateFrom(dataView: powerbi.DataView): void {
         if (!dataView || !dataView.metadata || !dataView.metadata.objects) {
             return;
         }
 
+        // loop over each object and property in dataview and add its value to settings model object
         Object.keys(this).forEach((objectName: string) => {
             Object.keys(this[objectName]).forEach((propertyName: string) => {
                 let dataViewObjects = dataView.metadata.objects;
                 if (dataViewObjects?.[objectName]?.[propertyName]) {
-                    this[objectName][propertyName].value = getPropertyValue(dataViewObjects[objectName][propertyName], this[objectName][propertyName].value);
+                    this[objectName].slices[propertyName].value = getPropertyValue(dataViewObjects[objectName][propertyName], this[objectName][propertyName].value);
                 }
             });
         });
     }
 
     public buildFormattingModel(): visuals.FormattingModel {
-        let formattingModel = { cards: [] }
+        let formattingModel = {
+            cards: []
+        }
+
         Object.keys(this).forEach((objectName: string) => {
             let settingsObject = this[objectName];
 
@@ -31,27 +37,27 @@ export class FormattingSettingsModel {
                 uid: objectName + "-group"
             }
 
-
             let formattingCard: visuals.FormattingCard = {
                 displayName: settingsObject.displayName,
                 groups: [formattingGroup],
-                uid: objectName // TODO need to be localized?
+                uid: objectName
             }
 
             formattingModel.cards.push(formattingCard);
 
-            // go over slices
-            Object.keys(settingsObject).forEach((propertyName: string) => {
-                let settingsProperty: any = settingsObject[propertyName];
-                if (settingsProperty && settingsProperty.value!=undefined ) {
-                    let circleCardFormattingSlice: visuals.FormattingSlice = parseFormattingSettingsSlice(settingsProperty, objectName,propertyName);
+            // Build formatting slice for each property
+            let settingsObjectProperties = settingsObject.slices;
+            Object.keys(settingsObjectProperties).forEach((propertyName: string) => {
+                let settingsProperty: any = settingsObjectProperties[propertyName];
+                if (settingsProperty && settingsProperty.value != undefined) {
+                    let formattingSlice: visuals.FormattingSlice = parseFormattingSettingsSlice(settingsProperty, objectName, propertyName);
 
-                    if (circleCardFormattingSlice){
-                        if(propertyName == "show" && circleCardFormattingSlice.control.type == powerbi.visuals.FormattingComponent.ToggleSwitch){
-                            circleCardFormattingSlice.suppressDisplayName = true;
-                            formattingCard.topLevelToggle = <powerbi.visuals.EnabledSlice>circleCardFormattingSlice;
-                        }else {
-                        formattingGroup.slices.push(circleCardFormattingSlice);
+                    if (formattingSlice) {
+                        if (propertyName == "show" && formattingSlice.control.type == powerbi.visuals.FormattingComponent.ToggleSwitch) {
+                            formattingSlice.suppressDisplayName = true;
+                            formattingCard.topLevelToggle = <powerbi.visuals.EnabledSlice>formattingSlice;
+                        } else {
+                            formattingGroup.slices.push(formattingSlice);
                         }
                     }
                 }
