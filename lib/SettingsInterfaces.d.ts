@@ -18,6 +18,7 @@ export interface FormattingSettingsSlice {
     placeholder?: string;
 }
 export interface FormattingSettingsCard {
+    displayName: string;
     slices: FormattingSettingsSlices;
 }
 export interface FormattingSettingsSlices {

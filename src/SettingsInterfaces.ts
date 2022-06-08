@@ -22,6 +22,7 @@ export interface FormattingSettingsSlice {
 }
 
 export interface FormattingSettingsCard {
+    displayName: string;
     slices: FormattingSettingsSlices
 }
 

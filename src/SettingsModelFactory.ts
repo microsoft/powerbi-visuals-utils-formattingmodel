@@ -5,7 +5,7 @@ import visuals = powerbi.visuals;
 
 export class FormattingSettingsModel {
 
-    cards: FormattingSettingsCards;
+    cards: FormattingSettingsCards = {};
 
     public populateFrom(dataView: powerbi.DataView): void {
         if (!dataView || !dataView.metadata || !dataView.metadata.objects) {
@@ -13,11 +13,12 @@ export class FormattingSettingsModel {
         }
 
         // loop over each object and property in dataview and add its value to settings model object
-        Object.keys(this).forEach((objectName: string) => {
-            Object.keys(this[objectName]).forEach((propertyName: string) => {
+        Object.keys(this.cards).forEach((objectName: string) => {
+            let slices = this.cards[objectName].slices;
+            Object.keys(slices).forEach((propertyName: string) => {
                 let dataViewObjects = dataView.metadata.objects;
-                if (dataViewObjects?.[objectName]?.[propertyName]) {
-                    this[objectName].slices[propertyName].value = getPropertyValue(dataViewObjects[objectName][propertyName], this[objectName][propertyName].value);
+                if (dataViewObjects?.[objectName]?.[propertyName] !== undefined) {
+                    slices[propertyName].value = getPropertyValue(dataViewObjects[objectName][propertyName], this.cards[objectName].slices[propertyName].value);
                 }
             });
         });
@@ -28,8 +29,8 @@ export class FormattingSettingsModel {
             cards: []
         }
 
-        Object.keys(this).forEach((objectName: string) => {
-            let settingsObject = this[objectName];
+        Object.keys(this.cards).forEach((objectName: string) => {
+            let settingsObject = this.cards[objectName];
 
             let formattingGroup: visuals.FormattingGroup = {
                 displayName: undefined,
