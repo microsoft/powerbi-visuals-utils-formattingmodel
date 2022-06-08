@@ -3,6 +3,6 @@ import { FormattingSettingsCards } from "./SettingsInterfaces";
 import visuals = powerbi.visuals;
 export declare class FormattingSettingsModel {
     cards: FormattingSettingsCards;
-    populateFrom(dataView: powerbi.DataView): void;
+    static populateFrom<T extends FormattingSettingsModel>(dataView: powerbi.DataView): T;
     buildFormattingModel(): visuals.FormattingModel;
 }
