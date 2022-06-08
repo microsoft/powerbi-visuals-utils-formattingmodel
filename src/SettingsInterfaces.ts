@@ -17,6 +17,7 @@ export interface FormattingSettingsSlice {
     name: string;
     value: any;
     type: powerbi.visuals.FormattingComponent;
+    description: string;
     validators?: ValidationNumericInfo;
     placeholder?: string;
 }

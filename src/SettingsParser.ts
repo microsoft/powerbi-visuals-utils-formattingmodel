@@ -11,8 +11,8 @@ export function parseFormattingSettingsSlice(slice: FormattingSettingsSlice, obj
     let controlType = slice.type;
     let componentDisplayName = {
         displayName: slice.name,
-        description: "",
-        uid: objectName + '-' + slice.name,
+        description: slice.description,
+        uid: objectName + '-' + propertyName,
     };
 
     switch (controlType) {
@@ -84,7 +84,7 @@ export function parseFormattingSettingsSlice(slice: FormattingSettingsSlice, obj
 
 export function getValidSelectionValue(selectionOptions: powerbi.IEnumMember[], value: any): any {
     if (value != null && _.isNumber(value)) {
-        // We need to convert numerical value to string, because when selection options bind in to the option in selectValue ng-model it been converted to a string.
+        //It been converted to string, because when selection options bind in to the option in selectValue ng-model it been converted to a string.
         // Then we fail to find selectValue which is the value variable here in the option values, since selectValue is a number and option values are strings.
         let strValue = value.toString();
         for (let option of selectionOptions) {
