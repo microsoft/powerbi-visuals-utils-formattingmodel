@@ -1,7 +1,8 @@
-import powerbi from "powerbi-visuals-api"
-import { parseFormattingSettingsSlice, getPropertyValue } from "./utils/FormattingSettingsParser"
-import { FormattingSettingsCard, FormattingSettingsSlice } from "./FormattingSettingsInterfaces"
+import powerbi from "powerbi-visuals-api";
+import { FormattingSettingsCard, FormattingSettingsSlice } from "./FormattingSettingsInterfaces";
+import { getPropertyValue, parseFormattingSettingsSlice } from "./utils/FormattingSettingsParser";
 import visuals = powerbi.visuals;
+import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 
 export class FormattingSettingsModel {
     cards: Array<FormattingSettingsCard> = [];
@@ -11,16 +12,22 @@ export class FormattingSettingsModel {
      * @param dataView metadata dataView object
      * @returns visual formatting settings model 
      */
-    public static populateFrom<T extends FormattingSettingsModel>(dataView: powerbi.DataView): T {
+    public static populateFrom<T extends FormattingSettingsModel>(options: VisualUpdateOptions): T {
         let defaultSettings = <T>new this();
-        if (!dataView || !dataView.metadata || !dataView.metadata.objects) {
+
+        let dataViews = options.dataViews;
+        if (!dataViews
+            || !dataViews[0]
+            || !dataViews[0].metadata
+            || !dataViews[0].metadata.objects
+        ) {
             return defaultSettings;
         }
 
         // loop over each object and property in dataview and add its value to settings model object
+        let dataViewObjects = dataViews[0].metadata.objects;
         defaultSettings.cards.forEach((card: FormattingSettingsCard) => {
             card.slices.forEach((slice: FormattingSettingsSlice) => {
-                let dataViewObjects = dataView.metadata.objects;
                 const objectName = card.name;
                 const propertyName = slice.name;
                 if (dataViewObjects?.[objectName]?.[propertyName] !== undefined) {
