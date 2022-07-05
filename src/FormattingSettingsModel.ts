@@ -64,16 +64,21 @@ export class FormattingSettingsModel {
             }
 
             formattingModel.cards.push(formattingCard);
-            let revertToDefaultDescriptors: visuals.FormattingDescriptor[] = []
+            const sliceNames: { [name: string]: number } = {};
 
             // Build formatting slice for each property
             card.slices.forEach((slice: FormattingSettingsSlice) => {
-
-                const propertyName = slice.name;
                 if (slice.value != undefined) {
                     let formattingSlice: visuals.FormattingSlice = parseFormattingSettingsSlice(slice, objectName);
 
                     if (formattingSlice) {
+                        if (sliceNames[slice.name] === undefined) {
+                            sliceNames[slice.name] = 0;
+                        } else {
+                            sliceNames[slice.name]++;
+                            formattingSlice.uid = `${formattingSlice.uid}-${sliceNames[slice.name]}`;
+                        }
+
                         if (slice.topLevelToggle) {
                             formattingSlice.suppressDisplayName = true;
                             formattingCard.topLevelToggle = <powerbi.visuals.EnabledSlice>formattingSlice;
@@ -82,14 +87,26 @@ export class FormattingSettingsModel {
                         }
                     }
                 }
-
-                // add formatting slice to revert to default object
-                revertToDefaultDescriptors.push({ objectName: objectName, propertyName: propertyName })
             });
 
-            formattingCard.revertToDefaultDescriptors = revertToDefaultDescriptors;
+            formattingCard.revertToDefaultDescriptors = this.getRevertToDefaultDescriptor(card);
         });
 
         return formattingModel;
+    }
+
+    private getRevertToDefaultDescriptor(card: FormattingSettingsCard): powerbi.visuals.FormattingDescriptor[] {
+        const sliceNames: { [name: string]: boolean } = {};
+        let revertToDefaultDescriptors: powerbi.visuals.FormattingDescriptor[] = [];
+        card.slices.forEach((slice: FormattingSettingsSlice) => {
+            if (!sliceNames[slice.name]) {
+                sliceNames[slice.name] = true
+                revertToDefaultDescriptors.push({
+                    objectName: card.name,
+                    propertyName: slice.name
+                })
+            }
+        });
+        return revertToDefaultDescriptors;
     }
 }

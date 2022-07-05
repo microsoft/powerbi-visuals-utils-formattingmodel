@@ -1,5 +1,5 @@
+import powerbi from "powerbi-visuals-api";
 import { FormattingSettingsSlice } from "../FormattingSettingsInterfaces";
-import powerbi from "powerbi-visuals-api"
 
 import visuals = powerbi.visuals;
 
@@ -28,7 +28,7 @@ export function parseFormattingSettingsSlice(slice: FormattingSettingsSlice, obj
                 control: {
                     type: visuals.FormattingComponent.ColorPicker,
                     properties: {
-                        descriptor: getDescriptor(objectName, propertyName),
+                        descriptor: getDescriptor(objectName, slice),
                         value: { value: slice.value },
                     }
                 },
@@ -40,7 +40,7 @@ export function parseFormattingSettingsSlice(slice: FormattingSettingsSlice, obj
                 control: {
                     type: controlType,
                     properties: {
-                        descriptor: getDescriptor(objectName, propertyName),
+                        descriptor: getDescriptor(objectName, slice),
                         value: slice.value
                     }
                 },
@@ -53,7 +53,7 @@ export function parseFormattingSettingsSlice(slice: FormattingSettingsSlice, obj
                 control: {
                     type: controlType,
                     properties: {
-                        descriptor: getDescriptor(objectName, propertyName),
+                        descriptor: getDescriptor(objectName, slice),
                         value: slice.value,
                         placeholder: slice.placeholder
                     }
@@ -84,9 +84,12 @@ export function getPropertyValue(value: any, defaultValue: any): any {
     return value;
 }
 
-function getDescriptor(objectName: string, propertyName: string): powerbi.visuals.FormattingDescriptor {
+function getDescriptor(objectName: string, slice: FormattingSettingsSlice): powerbi.visuals.FormattingDescriptor {
     return {
         objectName: objectName,
-        propertyName: propertyName
+        propertyName: slice.name,
+        selector: slice.selector,
+        altConstantValueSelector: slice.altConstantValueSelector,
+        instanceKind: slice.instanceKind
     };
 }
