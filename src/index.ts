@@ -1,3 +1,3 @@
-import * as formattingSettings from "./FormattingSettingsInterfaces"
+import * as formattingSettings from "./FormattingSettingsComponents"
 import * as  formattingSettingsModel from "./FormattingSettingsModel"
 export {formattingSettings, formattingSettingsModel}

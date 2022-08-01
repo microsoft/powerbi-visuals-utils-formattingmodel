@@ -1,52 +1,28 @@
 import powerbi_api from "powerbi-visuals-api";
-import { getPropertyValue, isCompositeSlice, parseFormattingSettingsSlice } from "./utils/FormattingSettingsParser";
+import * as formattingSettings from "./FormattingSettingsComponents";
 import visuals = powerbi_api.visuals;
-import VisualUpdateOptions = powerbi_api.extensibility.visual.VisualUpdateOptions;
-import * as formattingSettings from "./FormattingSettingsInterfaces";
 
 
 export class FormattingSettingsModel {
-    cards: Array<formattingSettings.Card> = [];
+    cards: Array<formattingSettings.Card>;
 
     /**
      * Build visual formatting settings model from metadata dataView
      * @param dataView metadata dataView object
      * @returns visual formatting settings model 
      */
-    public static populateFrom<T extends FormattingSettingsModel>(options: VisualUpdateOptions): T {
+    public static populateFrom<T extends FormattingSettingsModel>(dataViews: powerbi_api.DataView[]): T {
         let defaultSettings = <T>new this();
 
-        let dataViews = options.dataViews;
-        if (!dataViews
-            || !dataViews[0]
-            || !dataViews[0].metadata
-            || !dataViews[0].metadata.objects
-        ) {
-            return defaultSettings;
-        }
-
-        // loop over each object and property in dataview and add its value to settings model object
-        let dataViewObjects = dataViews[0].metadata.objects;
-        defaultSettings.cards.forEach((card: formattingSettings.Card) => {
-            card.slices.forEach((slice: formattingSettings.Slice) => {
-                const objectName = card.name;
-                if (isCompositeSlice(slice.type)) {
-                    let compositeSlice = <formattingSettings.CompositeSlice>slice;
-                    Object.keys(compositeSlice).forEach(key => {
-                        let property = compositeSlice[key];
-                        if (property?.name) {
-                            property.value = getPropertyValue(dataViewObjects[objectName][property.name], property.value);
-                        }
-                    });
-                } else {
-                    let simpleSlice = <formattingSettings.SimpleSlice>slice;
-                    const propertyName = slice.name;
-                    if (dataViewObjects?.[objectName]?.[propertyName] !== undefined) {
-                        simpleSlice.value = getPropertyValue(dataViewObjects[objectName][propertyName], simpleSlice.value);
-                    }
-                }
+        let dataViewObjects = dataViews?.[0]?.metadata?.objects;
+        if (dataViewObjects) {
+            // loop over each object and property in dataview and add its value to settings model object
+            defaultSettings.cards?.forEach((card: formattingSettings.Card) => {
+                card?.slices?.forEach((slice: formattingSettings.Slice) => {
+                    slice?.setPropertiesValues(dataViewObjects, card.name);
+                });
             });
-        });
+        }
 
         return defaultSettings;
     }
@@ -60,7 +36,10 @@ export class FormattingSettingsModel {
             cards: []
         }
 
-        this.cards.forEach((card: formattingSettings.Card) => {
+        this.cards?.forEach((card: formattingSettings.Card) => {
+            if(!card)
+                return;
+                
             const objectName = card.name;
             let formattingGroup: visuals.FormattingGroup = {
                 displayName: undefined,
@@ -79,8 +58,8 @@ export class FormattingSettingsModel {
             const sliceNames: { [name: string]: number } = {};
 
             // Build formatting slice for each property
-            card.slices.forEach((slice: formattingSettings.Slice) => {
-                let formattingSlice: visuals.FormattingSlice = parseFormattingSettingsSlice(slice, objectName);
+            card.slices?.forEach((slice: formattingSettings.Slice) => {
+                let formattingSlice: visuals.FormattingSlice = slice?.getFormattingSlice(objectName);
 
                 if (formattingSlice) {
                     if (sliceNames[slice.name] === undefined) {
@@ -108,28 +87,14 @@ export class FormattingSettingsModel {
     private getRevertToDefaultDescriptor(card: formattingSettings.Card): powerbi_api.visuals.FormattingDescriptor[] {
         const sliceNames: { [name: string]: boolean } = {};
         let revertToDefaultDescriptors: powerbi_api.visuals.FormattingDescriptor[] = [];
-        card.slices.forEach((slice: formattingSettings.Slice) => {
 
-            if (!sliceNames[slice.name]) {
+        card.slices?.forEach((slice: formattingSettings.Slice) => {
+            if (slice && !sliceNames[slice.name]) {
                 sliceNames[slice.name] = true
-                if (isCompositeSlice(slice.type)) {
-                    Object.keys(slice).forEach(key => {
-                        let property = slice[key];
-                        if (property?.name) {
-                            revertToDefaultDescriptors.push({
-                                objectName: card.name,
-                                propertyName: property.name
-                            })
-                        }
-                    })
-                } else {
-                    revertToDefaultDescriptors.push({
-                        objectName: card.name,
-                        propertyName: slice.name
-                    })
-                }
+                revertToDefaultDescriptors = revertToDefaultDescriptors.concat(slice.getRevertToDefaultDescriptor(card.name));
             }
         });
+
         return revertToDefaultDescriptors;
     }
 }
