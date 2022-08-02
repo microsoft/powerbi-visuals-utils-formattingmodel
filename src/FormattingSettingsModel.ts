@@ -1,6 +1,7 @@
-import powerbi_api from "powerbi-visuals-api";
+import powerbi from "powerbi-visuals-api";
 import * as formattingSettings from "./FormattingSettingsComponents";
-import visuals = powerbi_api.visuals;
+
+import visuals = powerbi.visuals;
 
 
 export class FormattingSettingsModel {
@@ -11,7 +12,7 @@ export class FormattingSettingsModel {
      * @param dataView metadata dataView object
      * @returns visual formatting settings model 
      */
-    public static populateFrom<T extends FormattingSettingsModel>(dataViews: powerbi_api.DataView[]): T {
+    public static populateFrom<T extends FormattingSettingsModel>(dataViews: powerbi.DataView[]): T {
         let defaultSettings = <T>new this();
 
         let dataViewObjects = dataViews?.[0]?.metadata?.objects;
@@ -71,7 +72,7 @@ export class FormattingSettingsModel {
 
                     if ((slice as formattingSettings.ToggleSwitch).topLevelToggle) {
                         formattingSlice.suppressDisplayName = true;
-                        formattingCard.topLevelToggle = <powerbi_api.visuals.EnabledSlice>formattingSlice;
+                        formattingCard.topLevelToggle = <visuals.EnabledSlice>formattingSlice;
                     } else {
                         formattingGroup.slices.push(formattingSlice);
                     }
@@ -84,9 +85,9 @@ export class FormattingSettingsModel {
         return formattingModel;
     }
 
-    private getRevertToDefaultDescriptor(card: formattingSettings.Card): powerbi_api.visuals.FormattingDescriptor[] {
+    private getRevertToDefaultDescriptor(card: formattingSettings.Card): visuals.FormattingDescriptor[] {
         const sliceNames: { [name: string]: boolean } = {};
-        let revertToDefaultDescriptors: powerbi_api.visuals.FormattingDescriptor[] = [];
+        let revertToDefaultDescriptors: visuals.FormattingDescriptor[] = [];
 
         card.slices?.forEach((slice: formattingSettings.Slice) => {
             if (slice && !sliceNames[slice.name]) {
