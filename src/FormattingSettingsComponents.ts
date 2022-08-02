@@ -17,6 +17,7 @@ class NamedEntity {
 }
 
 export class Card extends NamedEntity {
+    /** name should be the exact same object name from capabilities objects that this formatting card is representing */
     name: string;
     slices: Array<Slice>;
 
@@ -27,13 +28,14 @@ export class Card extends NamedEntity {
 export type Slice = SimpleSlice | CompositeSlice;
 
 export abstract class SimpleSlice<T = any> extends NamedEntity implements SettingsSlice {
+    /** name should be the exact same property name from capabilities object properties list that this formatting slice is representing */
     name: string;
     value: T;
     selector?: data.Selector;
     altConstantSelector?: data.Selector;
     instanceKind?: powerbi.VisualEnumerationInstanceKinds;
 
-    // type declared in each slice sub class, No need to declare it in initializing object
+    /** type declared in each slice sub class, No need to declare it in initializing object */
     type?: visuals.FormattingComponent;
 
     constructor(object: SimpleSlice<any>) {
@@ -343,6 +345,8 @@ export class ShapeMapSelector extends SimpleSlice<powerbi.GeoJson> {
 }
 
 export abstract class CompositeSlice extends NamedEntity implements SettingsSlice {
+    /** composite slice name isn't required to be from capabilities 
+     * it will only be used for building formatting slice uid*/
     name: string;
     type?: visuals.FormattingComponent;
 
@@ -350,7 +354,7 @@ export abstract class CompositeSlice extends NamedEntity implements SettingsSlic
         super();
         Object.assign(this, object);
     }
-    
+
     getFormattingSlice?(objectName: string): visuals.CompositeVisualFormattingSlice {
         const controlType = this.type;
         const propertyName = this.name;
