@@ -9,7 +9,8 @@ export class FormattingSettingsModel {
 
     /**
      * Build visual formatting settings model from metadata dataView
-     * @param dataView metadata dataView object
+     * 
+     * @param dataViews metadata dataView object
      * @returns visual formatting settings model 
      */
     public static populateFrom<T extends FormattingSettingsModel>(dataViews: powerbi.DataView[]): T {
@@ -17,7 +18,7 @@ export class FormattingSettingsModel {
 
         let dataViewObjects = dataViews?.[0]?.metadata?.objects;
         if (dataViewObjects) {
-            // loop over each object and property in dataview and add its value to settings model object
+            // loop over each formatting property and set its new value if it exist in dataViews
             defaultSettings.cards?.forEach((card: formattingSettings.Card) => {
                 card?.slices?.forEach((slice: formattingSettings.Slice) => {
                     slice?.setPropertiesValues(dataViewObjects, card.name);
@@ -30,7 +31,8 @@ export class FormattingSettingsModel {
 
     /**
      * Build formatting model by parsing formatting settings model object 
-     * @returns custom visual formatting model
+     * 
+     * @returns powerbi visual formatting model
      */
     public buildFormattingModel(): visuals.FormattingModel {
         let formattingModel = {
@@ -38,9 +40,9 @@ export class FormattingSettingsModel {
         }
 
         this.cards?.forEach((card: formattingSettings.Card) => {
-            if(!card)
+            if (!card)
                 return;
-                
+
             const objectName = card.name;
             let formattingGroup: visuals.FormattingGroup = {
                 displayName: undefined,
@@ -66,6 +68,8 @@ export class FormattingSettingsModel {
                     if (sliceNames[slice.name] === undefined) {
                         sliceNames[slice.name] = 0;
                     } else {
+                        // In case formatting model contains multiple categories selectors which they use same capabilities 
+                        // object name and property name, Modify the current slice uid to be unique by adding counter value to the new slice uid
                         sliceNames[slice.name]++;
                         formattingSlice.uid = `${formattingSlice.uid}-${sliceNames[slice.name]}`;
                     }
@@ -86,6 +90,8 @@ export class FormattingSettingsModel {
     }
 
     private getRevertToDefaultDescriptor(card: formattingSettings.Card): visuals.FormattingDescriptor[] {
+        // Proceeded slice names are saved to prevent duplicated default descriptors in case of using 
+        // formatting categories & selectors, since they have the same descriptor objectName and propertyName
         const sliceNames: { [name: string]: boolean } = {};
         let revertToDefaultDescriptors: visuals.FormattingDescriptor[] = [];
 

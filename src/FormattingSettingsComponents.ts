@@ -350,12 +350,7 @@ export abstract class CompositeSlice extends NamedEntity implements SettingsSlic
         super();
         Object.assign(this, object);
     }
-
-    /**
-     * Build and return composite formatting slice
-     * @param objectName Capabilities object name that contain this slice property
-     * @returns formatting composite slice
-     */
+    
     getFormattingSlice?(objectName: string): visuals.CompositeVisualFormattingSlice {
         const controlType = this.type;
         const propertyName = this.name;

@@ -18,17 +18,17 @@ export interface SettingsSlice {
      * Simple component base may be contain more parameters depends on which property that extends SimpleSlice class is called 
      *
      * @param objectName Capabilities object name that contain this slice property
-     * @returns simple or omposite formatting component 
+     * @returns simple or composite formatting component 
      */
     getFormattingComponent?(objectName: string): visuals.SimpleComponentBase<any> | visuals.CompositeComponentPropertyType;
 
     /**
      * Return array that contains formatting property default descriptor
-     * This default descriptor contian only objectName and propertyName and it's used on revertToDefaultDescriptor object 
+     * This default descriptor contain only objectName and propertyName and it's used on revertToDefaultDescriptor object 
      * in formattingSlice for revert formatting pane properties to default values
      * 
      * @param objectName Capabilities object name that contain this slice property
-     * @returns slice properites default desriptors array
+     * @returns slice properties default descriptors array
      */
     getRevertToDefaultDescriptor?(objectName: string): visuals.FormattingDescriptor[];
 
