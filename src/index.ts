@@ -1,4 +1,3 @@
-import { FormattingSettingsCard, FormattingSettingsSlice } from "./FormattingSettingsInterfaces"
-import { FormattingSettingsModel } from "./FormattingSettingsModel"
-
-export { FormattingSettingsModel, FormattingSettingsCard, FormattingSettingsSlice }
+import * as formattingSettings from "./FormattingSettingsComponents"
+import * as  formattingSettingsModel from "./FormattingSettingsModel"
+export {formattingSettings, formattingSettingsModel}

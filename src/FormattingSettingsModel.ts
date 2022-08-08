@@ -1,54 +1,48 @@
 import powerbi from "powerbi-visuals-api";
-import { FormattingSettingsCard, FormattingSettingsSlice } from "./FormattingSettingsInterfaces";
-import { getPropertyValue, parseFormattingSettingsSlice } from "./utils/FormattingSettingsParser";
+import * as formattingSettings from "./FormattingSettingsComponents";
+
 import visuals = powerbi.visuals;
-import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
+
 
 export class FormattingSettingsModel {
-    cards: Array<FormattingSettingsCard> = [];
+    cards: Array<formattingSettings.Card>;
 
     /**
      * Build visual formatting settings model from metadata dataView
-     * @param dataView metadata dataView object
+     * 
+     * @param dataViews metadata dataView object
      * @returns visual formatting settings model 
      */
-    public static populateFrom<T extends FormattingSettingsModel>(options: VisualUpdateOptions): T {
+    public static populateFrom<T extends FormattingSettingsModel>(dataViews: powerbi.DataView[]): T {
         let defaultSettings = <T>new this();
 
-        let dataViews = options.dataViews;
-        if (!dataViews
-            || !dataViews[0]
-            || !dataViews[0].metadata
-            || !dataViews[0].metadata.objects
-        ) {
-            return defaultSettings;
-        }
-
-        // loop over each object and property in dataview and add its value to settings model object
-        let dataViewObjects = dataViews[0].metadata.objects;
-        defaultSettings.cards.forEach((card: FormattingSettingsCard) => {
-            card.slices.forEach((slice: FormattingSettingsSlice) => {
-                const objectName = card.name;
-                const propertyName = slice.name;
-                if (dataViewObjects?.[objectName]?.[propertyName] !== undefined) {
-                    slice.value = getPropertyValue(dataViewObjects[objectName][propertyName], slice.value);
-                }
+        let dataViewObjects = dataViews?.[0]?.metadata?.objects;
+        if (dataViewObjects) {
+            // loop over each formatting property and set its new value if it exist in dataViews
+            defaultSettings.cards?.forEach((card: formattingSettings.Card) => {
+                card?.slices?.forEach((slice: formattingSettings.Slice) => {
+                    slice?.setPropertiesValues(dataViewObjects, card.name);
+                });
             });
-        });
+        }
 
         return defaultSettings;
     }
 
     /**
      * Build formatting model by parsing formatting settings model object 
-     * @returns custom visual formatting model
+     * 
+     * @returns powerbi visual formatting model
      */
     public buildFormattingModel(): visuals.FormattingModel {
         let formattingModel = {
             cards: []
         }
 
-        this.cards.forEach((card: FormattingSettingsCard) => {
+        this.cards?.forEach((card: formattingSettings.Card) => {
+            if (!card)
+                return;
+
             const objectName = card.name;
             let formattingGroup: visuals.FormattingGroup = {
                 displayName: undefined,
@@ -67,24 +61,24 @@ export class FormattingSettingsModel {
             const sliceNames: { [name: string]: number } = {};
 
             // Build formatting slice for each property
-            card.slices.forEach((slice: FormattingSettingsSlice) => {
-                if (slice.value != undefined) {
-                    let formattingSlice: visuals.FormattingSlice = parseFormattingSettingsSlice(slice, objectName);
+            card.slices?.forEach((slice: formattingSettings.Slice) => {
+                let formattingSlice: visuals.FormattingSlice = slice?.getFormattingSlice(objectName);
 
-                    if (formattingSlice) {
-                        if (sliceNames[slice.name] === undefined) {
-                            sliceNames[slice.name] = 0;
-                        } else {
-                            sliceNames[slice.name]++;
-                            formattingSlice.uid = `${formattingSlice.uid}-${sliceNames[slice.name]}`;
-                        }
+                if (formattingSlice) {
+                    if (sliceNames[slice.name] === undefined) {
+                        sliceNames[slice.name] = 0;
+                    } else {
+                        // In case formatting model contains multiple categories selectors which they use same capabilities 
+                        // object name and property name, Modify the current slice uid to be unique by adding counter value to the new slice uid
+                        sliceNames[slice.name]++;
+                        formattingSlice.uid = `${formattingSlice.uid}-${sliceNames[slice.name]}`;
+                    }
 
-                        if (slice.topLevelToggle) {
-                            formattingSlice.suppressDisplayName = true;
-                            formattingCard.topLevelToggle = <powerbi.visuals.EnabledSlice>formattingSlice;
-                        } else {
-                            formattingGroup.slices.push(formattingSlice);
-                        }
+                    if ((slice as formattingSettings.ToggleSwitch).topLevelToggle) {
+                        formattingSlice.suppressDisplayName = true;
+                        formattingCard.topLevelToggle = <visuals.EnabledSlice>formattingSlice;
+                    } else {
+                        formattingGroup.slices.push(formattingSlice);
                     }
                 }
             });
@@ -95,18 +89,19 @@ export class FormattingSettingsModel {
         return formattingModel;
     }
 
-    private getRevertToDefaultDescriptor(card: FormattingSettingsCard): powerbi.visuals.FormattingDescriptor[] {
+    private getRevertToDefaultDescriptor(card: formattingSettings.Card): visuals.FormattingDescriptor[] {
+        // Proceeded slice names are saved to prevent duplicated default descriptors in case of using 
+        // formatting categories & selectors, since they have the same descriptor objectName and propertyName
         const sliceNames: { [name: string]: boolean } = {};
-        let revertToDefaultDescriptors: powerbi.visuals.FormattingDescriptor[] = [];
-        card.slices.forEach((slice: FormattingSettingsSlice) => {
-            if (!sliceNames[slice.name]) {
+        let revertToDefaultDescriptors: visuals.FormattingDescriptor[] = [];
+
+        card.slices?.forEach((slice: formattingSettings.Slice) => {
+            if (slice && !sliceNames[slice.name]) {
                 sliceNames[slice.name] = true
-                revertToDefaultDescriptors.push({
-                    objectName: card.name,
-                    propertyName: slice.name
-                })
+                revertToDefaultDescriptors = revertToDefaultDescriptors.concat(slice.getRevertToDefaultDescriptor(card.name));
             }
         });
+
         return revertToDefaultDescriptors;
     }
 }
