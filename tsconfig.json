@@ -7,9 +7,9 @@
       "sourceMap": true,
       "module": "ES2015",
       "moduleResolution": "node",
-      "target": "ES2016",
+      "target": "ES2015",
       "lib": [
-          "es2016",
+          "es2015",
           "dom"
       ],
       "outDir": "./lib"
