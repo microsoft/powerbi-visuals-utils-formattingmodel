@@ -5,7 +5,7 @@
 
 import powerbi from "powerbi-visuals-api";
 
-import { SettingsSlice } from "./IFormattingSettings";
+import { IFormattingSettingsCard, IFormattingSettingsSlice } from "./FormattingSettingsInterfaces";
 import * as FormattingSettingsParser from "./utils/FormattingSettingsUtils";
 
 import data = powerbi.data;
@@ -13,21 +13,41 @@ import visuals = powerbi.visuals;
 
 class NamedEntity {
     displayName?: string;
+    displayNameKey?: string;
     description?: string;
+    descriptionKey?: string;
 }
 
-export class Card extends NamedEntity {
+export class Model {
+    cards: Array<Card>;
+
+    static getDefaultValuesObject() {
+        return new this();
+    }
+}
+
+export class Card extends NamedEntity implements IFormattingSettingsCard {
     /** name should be the exact same object name from capabilities objects that this formatting card is representing */
     name: string;
     slices: Array<Slice>;
 
     /** if true, this card should be populated into the analytics pane */
     analyticsPane?: boolean;
+
+    getFormattingCard?(objectName: string, group: visuals.FormattingGroup, localizationManager?: powerbi.extensibility.ILocalizationManager) {
+        return {
+            displayName: (localizationManager && this.displayNameKey)
+                ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName,
+            groups: [group],
+            uid: objectName,
+            analyticsPane: this.analyticsPane
+        }
+    }
 }
 
 export type Slice = SimpleSlice | CompositeSlice;
 
-export abstract class SimpleSlice<T = any> extends NamedEntity implements SettingsSlice {
+export abstract class SimpleSlice<T = any> extends NamedEntity implements IFormattingSettingsSlice {
     /** name should be the exact same property name from capabilities object properties list that this formatting slice is representing */
     name: string;
     value: T;
@@ -43,12 +63,14 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements Settin
         Object.assign(this, object);
     }
 
-    getFormattingSlice?(objectName: string): visuals.SimpleVisualFormattingSlice {
+    getFormattingSlice?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleVisualFormattingSlice {
         const controlType = this.type;
         const propertyName = this.name;
+        const sliceDisplayName = (localizationManager && this.displayNameKey) ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName;
+        const sliceDescription = (localizationManager && this.descriptionKey) ? localizationManager.getDisplayName(this.descriptionKey) : this.description;
         const componentDisplayName = {
-            displayName: this.displayName,
-            description: this.description,
+            displayName: sliceDisplayName,
+            description: sliceDescription,
             uid: objectName + '-' + propertyName,
         };
 
@@ -56,12 +78,12 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements Settin
             ...componentDisplayName,
             control: {
                 type: controlType,
-                properties: this.getFormattingComponent(objectName)
+                properties: this.getFormattingComponent(objectName, localizationManager)
             },
         };
     }
 
-    getFormattingComponent?(objectName: string): visuals.SimpleComponentBase<any> {
+    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleComponentBase<any> {
         return {
             descriptor: FormattingSettingsParser.getDescriptor(objectName, this),
             value: this.value,
@@ -152,6 +174,7 @@ export class Slider extends NumUpDown {
 
 export class DatePicker extends SimpleSlice<Date> {
     placeholder: string;
+    placeholderKey?: string;
     validators?: {
         max?: visuals.MaxValidator<Date>;
         min?: visuals.MinValidator<Date>;
@@ -163,10 +186,10 @@ export class DatePicker extends SimpleSlice<Date> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.DatePicker {
+    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager ): visuals.DatePicker {
         return {
             ... super.getFormattingComponent(objectName),
-            placeholder: this.placeholder,
+            placeholder: (localizationManager && this.placeholderKey) ? localizationManager.getDisplayName(this.placeholderKey) : this.placeholder,
             validators: this.validators
         }
     }
@@ -344,7 +367,7 @@ export class ShapeMapSelector extends SimpleSlice<powerbi.GeoJson> {
     }
 }
 
-export abstract class CompositeSlice extends NamedEntity implements SettingsSlice {
+export abstract class CompositeSlice extends NamedEntity implements IFormattingSettingsSlice {
     /** composite slice name isn't required to be from capabilities 
      * it will only be used for building formatting slice uid*/
     name: string;

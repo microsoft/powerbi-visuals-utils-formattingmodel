@@ -1,3 +1,3 @@
 import * as formattingSettings from "./FormattingSettingsComponents"
-import * as  formattingSettingsModel from "./FormattingSettingsModel"
-export {formattingSettings, formattingSettingsModel}
+import FormattingSettingsService from "./FormattingSettingsService"
+export { formattingSettings, FormattingSettingsService }
