@@ -60,8 +60,9 @@ export class FormattingSettingsService implements IFormattingSettingsService {
 
             formattingModel.cards.push(formattingCard);
 
-            // In case formatting model contains multiple categories selectors which they use same capabilities object name and property name, 
-            // Save slice names to modify each slice uid to be unique by adding counter value to the new slice uid
+            // In case formatting model adds data points or top categories (Like when you modify specific visual category color).
+            // these categories use same object name and property name from capabilities and the generated uid will be the same for these formatting categories properties
+            // Solution => Save slice names to modify each slice uid to be unique by adding counter value to the new slice uid
             const sliceNames: { [name: string]: number } = {};
 
             // Build formatting slice for each property

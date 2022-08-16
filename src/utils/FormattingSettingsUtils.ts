@@ -1,5 +1,4 @@
 import powerbi from "powerbi-visuals-api";
-import * as formattingSettings from "../FormattingSettingsComponents";
 import { ItemDropdown, SimpleSlice } from "../FormattingSettingsComponents";
 
 import Fill = powerbi.Fill;
@@ -12,7 +11,7 @@ import visuals = powerbi.visuals;
  * @param slice formatting simple slice
  * @returns simple slice formatting descriptor
  */
-export function getDescriptor(objectName: string, slice: formattingSettings.SimpleSlice): visuals.FormattingDescriptor {
+export function getDescriptor(objectName: string, slice: SimpleSlice): visuals.FormattingDescriptor {
     return {
         objectName: objectName,
         propertyName: slice.name,
