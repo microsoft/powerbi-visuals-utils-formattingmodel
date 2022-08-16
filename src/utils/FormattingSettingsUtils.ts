@@ -1,5 +1,6 @@
 import powerbi from "powerbi-visuals-api";
 import * as formattingSettings from "../FormattingSettingsComponents";
+import { ItemDropdown, SimpleSlice } from "../FormattingSettingsComponents";
 
 import Fill = powerbi.Fill;
 import visuals = powerbi.visuals;
@@ -29,13 +30,18 @@ export function getDescriptor(objectName: string, slice: formattingSettings.Simp
  * @param defaultValue formatting settings default value
  * @returns formatting property value
  */
- export function getPropertyValue(value: any, defaultValue: any): any {
-    if (value && (value as Fill).solid) {
-        return {value: (value as Fill)?.solid.color};
-    }
-
+export function getPropertyValue(slice: SimpleSlice, value: any, defaultValue: any): any {
     if (value == null || (typeof value === "object" && !(value as Fill).solid)) {
         return defaultValue;
+    }
+
+    if ((value as Fill).solid) {
+        return { value: (value as Fill)?.solid.color };
+    }
+
+    if ((slice as ItemDropdown)?.items) {
+        let itemsArray = (slice as ItemDropdown).items;
+        return itemsArray.find(item => item.value == value);
     }
 
     return value;

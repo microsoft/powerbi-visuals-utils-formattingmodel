@@ -99,7 +99,7 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
 
     setPropertiesValues?(dataViewObjects: powerbi.DataViewObjects, objectName: string): void {
         let newValue = <T>dataViewObjects?.[objectName]?.[this.name]
-        this.value = FormattingSettingsParser.getPropertyValue(newValue, this.value);
+        this.value = FormattingSettingsParser.getPropertyValue(this, newValue, this.value);
     }
 }
 
@@ -186,7 +186,7 @@ export class DatePicker extends SimpleSlice<Date> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager ): visuals.DatePicker {
+    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.DatePicker {
         return {
             ... super.getFormattingComponent(objectName),
             placeholder: (localizationManager && this.placeholderKey) ? localizationManager.getDisplayName(this.placeholderKey) : this.placeholder,
@@ -422,16 +422,16 @@ export class FontControl extends CompositeSlice {
             fontSize: this.fontSize.getFormattingComponent(objectName),
             bold: this.bold?.getFormattingComponent(objectName),
             italic: this.italic?.getFormattingComponent(objectName),
-            underline: this.underline.getFormattingComponent(objectName)
+            underline: this.underline?.getFormattingComponent(objectName)
         }
     }
 
     getRevertToDefaultDescriptor?(objectName: string): visuals.FormattingDescriptor[] {
         return this.fontFamily.getRevertToDefaultDescriptor(objectName)
             .concat(this.fontSize.getRevertToDefaultDescriptor(objectName))
-            .concat(this.bold?.getRevertToDefaultDescriptor(objectName))
-            .concat(this.italic?.getRevertToDefaultDescriptor(objectName))
-            .concat(this.underline?.getRevertToDefaultDescriptor(objectName));
+            .concat(this.bold ? this.bold.getRevertToDefaultDescriptor(objectName) : [])
+            .concat(this.italic ? this.italic.getRevertToDefaultDescriptor(objectName) : [])
+            .concat(this.underline ? this.underline.getRevertToDefaultDescriptor(objectName) : []);
     }
 
     setPropertiesValues?(dataViewObjects: powerbi.DataViewObjects, objectName: string) {
