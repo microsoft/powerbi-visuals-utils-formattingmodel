@@ -1,11 +1,16 @@
 import powerbi from "powerbi-visuals-api";
-import * as formattingSettings from "./FormattingSettingsComponents";
+import { Card, Model, Slice, ToggleSwitch } from "./FormattingSettingsComponents";
+import { IFormattingSettingsCard, IFormattingSettingsService } from "./FormattingSettingsInterfaces";
 
 import visuals = powerbi.visuals;
+import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 
+export class FormattingSettingsService implements IFormattingSettingsService {
+    private localizationManager: ILocalizationManager;
 
-export class FormattingSettingsModel {
-    cards: Array<formattingSettings.Card>;
+    constructor(localizationManager?: ILocalizationManager) {
+        this.localizationManager = localizationManager;
+    }
 
     /**
      * Build visual formatting settings model from metadata dataView
@@ -13,14 +18,15 @@ export class FormattingSettingsModel {
      * @param dataViews metadata dataView object
      * @returns visual formatting settings model 
      */
-    public static populateFrom<T extends FormattingSettingsModel>(dataViews: powerbi.DataView[]): T {
-        let defaultSettings = <T>new this();
+    public populateFormattingSettingsModel<T extends Model>(typeClass: new () => T, dataViews: powerbi.DataView[]): T {
+
+        let defaultSettings: T = new typeClass();
 
         let dataViewObjects = dataViews?.[0]?.metadata?.objects;
         if (dataViewObjects) {
             // loop over each formatting property and set its new value if it exist in dataViews
-            defaultSettings.cards?.forEach((card: formattingSettings.Card) => {
-                card?.slices?.forEach((slice: formattingSettings.Slice) => {
+            defaultSettings.cards?.forEach((card: Card) => {
+                card?.slices?.forEach((slice: Slice) => {
                     slice?.setPropertiesValues(dataViewObjects, card.name);
                 });
             });
@@ -34,12 +40,12 @@ export class FormattingSettingsModel {
      * 
      * @returns powerbi visual formatting model
      */
-    public buildFormattingModel(): visuals.FormattingModel {
+    public buildFormattingModel(formattingSettingsModel: Model): visuals.FormattingModel {
         let formattingModel = {
             cards: []
         }
 
-        this.cards?.forEach((card: formattingSettings.Card) => {
+        formattingSettingsModel.cards?.forEach((card: Card) => {
             if (!card)
                 return;
 
@@ -50,31 +56,28 @@ export class FormattingSettingsModel {
                 uid: objectName + "-group"
             }
 
-            let formattingCard: visuals.FormattingCard = {
-                displayName: card.displayName,
-                groups: [formattingGroup],
-                uid: objectName,
-                analyticsPane: card.analyticsPane
-            }
+            let formattingCard: visuals.FormattingCard = card.getFormattingCard(objectName, formattingGroup, this.localizationManager);
 
             formattingModel.cards.push(formattingCard);
+
+            // In case formatting model adds data points or top categories (Like when you modify specific visual category color).
+            // these categories use same object name and property name from capabilities and the generated uid will be the same for these formatting categories properties
+            // Solution => Save slice names to modify each slice uid to be unique by adding counter value to the new slice uid
             const sliceNames: { [name: string]: number } = {};
 
             // Build formatting slice for each property
-            card.slices?.forEach((slice: formattingSettings.Slice) => {
-                let formattingSlice: visuals.FormattingSlice = slice?.getFormattingSlice(objectName);
+            card.slices?.forEach((slice: Slice) => {
+                let formattingSlice: visuals.FormattingSlice = slice?.getFormattingSlice(objectName, this.localizationManager);
 
                 if (formattingSlice) {
                     if (sliceNames[slice.name] === undefined) {
                         sliceNames[slice.name] = 0;
                     } else {
-                        // In case formatting model contains multiple categories selectors which they use same capabilities 
-                        // object name and property name, Modify the current slice uid to be unique by adding counter value to the new slice uid
                         sliceNames[slice.name]++;
                         formattingSlice.uid = `${formattingSlice.uid}-${sliceNames[slice.name]}`;
                     }
 
-                    if ((slice as formattingSettings.ToggleSwitch).topLevelToggle) {
+                    if ((slice as ToggleSwitch).topLevelToggle) {
                         formattingSlice.suppressDisplayName = true;
                         formattingCard.topLevelToggle = <visuals.EnabledSlice>formattingSlice;
                     } else {
@@ -89,13 +92,13 @@ export class FormattingSettingsModel {
         return formattingModel;
     }
 
-    private getRevertToDefaultDescriptor(card: formattingSettings.Card): visuals.FormattingDescriptor[] {
+    private getRevertToDefaultDescriptor(card: Card): visuals.FormattingDescriptor[] {
         // Proceeded slice names are saved to prevent duplicated default descriptors in case of using 
         // formatting categories & selectors, since they have the same descriptor objectName and propertyName
         const sliceNames: { [name: string]: boolean } = {};
         let revertToDefaultDescriptors: visuals.FormattingDescriptor[] = [];
 
-        card.slices?.forEach((slice: formattingSettings.Slice) => {
+        card.slices?.forEach((slice: Slice) => {
             if (slice && !sliceNames[slice.name]) {
                 sliceNames[slice.name] = true
                 revertToDefaultDescriptors = revertToDefaultDescriptors.concat(slice.getRevertToDefaultDescriptor(card.name));
@@ -105,3 +108,5 @@ export class FormattingSettingsModel {
         return revertToDefaultDescriptors;
     }
 }
+
+export default FormattingSettingsService;

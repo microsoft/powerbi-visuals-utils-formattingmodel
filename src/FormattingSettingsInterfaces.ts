@@ -1,15 +1,36 @@
 
 import powerbi from "powerbi-visuals-api";
+import { Model } from "./FormattingSettingsComponents";
+
 import visuals = powerbi.visuals;
 
-export interface SettingsSlice {
+export interface IFormattingSettingsService {
+
+    /**
+     * Build visual formatting settings model from metadata dataView
+     * 
+     * @param dataViews metadata dataView object
+     * @returns visual formatting settings model 
+     */
+    populateFormattingSettingsModel<T extends Model>(typeClass: new () => T, dataViews: powerbi.DataView[]): T;
+
+    /**
+     * Build formatting model by parsing formatting settings model object 
+     * 
+     * @returns powerbi visual formatting model
+     */
+    buildFormattingModel(formattingSettingsModel: Model): visuals.FormattingModel;
+
+}
+
+export interface IFormattingSettingsSlice {
     /**
      * Build and return simple/composite formatting slice from formatting settings slice
      * 
      * @param objectName Capabilities object name that contain this slice property
      * @returns formatting simple/composite slice
      */
-    getFormattingSlice?(objectName: string): visuals.SimpleVisualFormattingSlice | visuals.CompositeVisualFormattingSlice;
+    getFormattingSlice?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleVisualFormattingSlice | visuals.CompositeVisualFormattingSlice;
 
     /**
      * Build and returns formatting simple/composite component object for formatting property
@@ -20,7 +41,7 @@ export interface SettingsSlice {
      * @param objectName Capabilities object name that contain this slice property
      * @returns simple or composite formatting component 
      */
-    getFormattingComponent?(objectName: string): visuals.SimpleComponentBase<any> | visuals.CompositeComponentPropertyType;
+    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleComponentBase<any> | visuals.CompositeComponentPropertyType;
 
     /**
      * Return array that contains formatting property default descriptor
@@ -39,4 +60,8 @@ export interface SettingsSlice {
      * @param objectName Capabilities object name that contain this slice property
      */
     setPropertiesValues?(dataViewObjects: powerbi.DataViewObjects, objectName: string): void;
+}
+
+export interface IFormattingSettingsCard {
+    getFormattingCard?(objectName: string, group: visuals.FormattingGroup, localizationManager?: powerbi.extensibility.ILocalizationManager);
 }
