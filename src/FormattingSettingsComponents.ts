@@ -29,7 +29,8 @@ export class Model {
 export class Card extends NamedEntity implements IFormattingSettingsCard {
     /** name should be the exact same object name from capabilities objects that this formatting card is representing */
     name: string;
-    slices: Array<Slice>;
+    slices?: Array<Slice>;
+    container?: Container;
 
     /** if true, this card should be populated into the analytics pane */
     analyticsPane?: boolean;
@@ -38,6 +39,8 @@ export class Card extends NamedEntity implements IFormattingSettingsCard {
         return {
             displayName: (localizationManager && this.displayNameKey)
                 ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName,
+            description: (localizationManager && this.descriptionKey)
+                ? localizationManager.getDisplayName(this.descriptionKey) : this.description,
             groups: [group],
             uid: objectName,
             analyticsPane: this.analyticsPane
@@ -477,4 +480,18 @@ export class MarginPadding extends CompositeSlice {
         this.top.setPropertiesValues(dataViewObjects, objectName);
         this.bottom.setPropertiesValues(dataViewObjects, objectName);
     }
+}
+
+
+export class Container extends NamedEntity {
+    containerItems: ContainerItem[];
+    /**
+     * Whether this container allows editing, including add/remove container items, and
+     * edit of individual container item's value itself.
+     */
+    isEditable?: boolean;
+}
+
+export class ContainerItem extends NamedEntity {
+    slices?: Slice[];
 }
