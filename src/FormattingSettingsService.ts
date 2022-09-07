@@ -24,7 +24,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
 
         let dataViewObjects = dataViews?.[0]?.metadata?.objects;
         if (dataViewObjects) {
-            // loop over each formatting property and set its new value if it exist in dataViews
+            // loop over each formatting property and set its new value if exists
             defaultSettings.cards?.forEach((card: Card) => {
                 card?.slices?.forEach((slice: Slice) => {
                     slice?.setPropertiesValues(dataViewObjects, card.name);
@@ -166,7 +166,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                 revertToDefaultDescriptors = revertToDefaultDescriptors.concat(slice.getRevertToDefaultDescriptor(cardName));
             }
         });
-        
+
         return revertToDefaultDescriptors;
     }
 }

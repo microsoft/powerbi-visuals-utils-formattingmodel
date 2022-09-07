@@ -7,7 +7,7 @@ import visuals = powerbi.visuals;
 /**
  * Build and return formatting descriptor for simple slice
  * 
- * @param objectName Object name from capabilities of the object that contain this slice property
+ * @param objectName Object name from capabilities
  * @param slice formatting simple slice
  * @returns simple slice formatting descriptor
  */
@@ -22,7 +22,7 @@ export function getDescriptor(objectName: string, slice: SimpleSlice): visuals.F
 }
 
 /**
- * Get property value from dataview objects if it exist there
+ * Get property value from dataview objects if exists
  * Else return the default value from formatting settings object
  * 
  * @param value dataview object value

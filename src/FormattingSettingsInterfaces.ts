@@ -27,16 +27,14 @@ export interface IFormattingSettingsSlice {
     /**
      * Build and return simple/composite formatting slice from formatting settings slice
      * 
-     * @param objectName Capabilities object name that contain this slice property
-     * @returns formatting simple/composite slice
+     * @param objectName Object name from capabilities 
      */
     getFormattingSlice?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleVisualFormattingSlice | visuals.CompositeVisualFormattingSlice;
 
     /**
      * Build and returns formatting simple/composite component object for formatting property
-     * Formatting simple component base will contain basically descriptor and value objects
-     * While formatting composite component will contain multiple of formatting simple component
-     * Simple component base may be contain more parameters depends on which property that extends SimpleSlice class is called 
+     * Formatting simple component contains basically value, descriptor and additional parameters (depends on its type)
+     * Formatting composite component contains multiple of formatting simple components
      *
      * @param objectName Capabilities object name that contain this slice property
      * @returns simple or composite formatting component 
@@ -44,20 +42,19 @@ export interface IFormattingSettingsSlice {
     getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleComponentBase<any> | visuals.CompositeComponentPropertyType;
 
     /**
-     * Return array that contains formatting property default descriptor
-     * This default descriptor contain only objectName and propertyName and it's used on revertToDefaultDescriptor object 
-     * in formattingSlice for revert formatting pane properties to default values
+     * Return array of formatting properties default descriptors
+     * Default descriptor contain only objectName and propertyName
      * 
-     * @param objectName Capabilities object name that contain this slice property
+     * @param objectName Object name from capabilities
      * @returns slice properties default descriptors array
      */
     getRevertToDefaultDescriptor?(objectName: string): visuals.FormattingDescriptor[];
 
     /**
-     * Extract and set formatting property value
+     * Set formatting property value
      * 
-     * @param dataViewObjects options dataview
-     * @param objectName Capabilities object name that contain this slice property
+     * @param dataViewObjects Dataview objects
+     * @param objectName Object name from capabilities
      */
     setPropertiesValues?(dataViewObjects: powerbi.DataViewObjects, objectName: string): void;
 }
