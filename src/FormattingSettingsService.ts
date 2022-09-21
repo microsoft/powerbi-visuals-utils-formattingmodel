@@ -146,11 +146,11 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         const sliceNames: { [name: string]: boolean } = {};
         let revertToDefaultDescriptors: visuals.FormattingDescriptor[] = [];
 
-        let cardSlicesDefaultDescriptors = this.getSlicesRevertToDefaultDescriptor(card.name, card.slices, sliceNames);
+        let cardSlicesDefaultDescriptors: visuals.FormattingDescriptor[] = this.getSlicesRevertToDefaultDescriptor(card.name, card.slices, sliceNames);
 
-        let cardContainerSlicesDefaultDescriptors = [];
+        let cardContainerSlicesDefaultDescriptors: visuals.FormattingDescriptor[] = [];
         card.container?.containerItems?.forEach((containerItem: formattingSettings.ContainerItem) => {
-            cardContainerSlicesDefaultDescriptors.concat(
+            cardContainerSlicesDefaultDescriptors = cardContainerSlicesDefaultDescriptors.concat(
                 this.getSlicesRevertToDefaultDescriptor(card.name, containerItem.slices, sliceNames))
         });
 
