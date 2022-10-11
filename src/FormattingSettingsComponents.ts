@@ -458,8 +458,8 @@ export class MarginPadding extends CompositeSlice {
         return {
             left: this.left.getFormattingComponent(objectName),
             right: this.right.getFormattingComponent(objectName),
-            top: this.top?.getFormattingComponent(objectName),
-            bottom: this.bottom?.getFormattingComponent(objectName)
+            top: this.top.getFormattingComponent(objectName),
+            bottom: this.bottom.getFormattingComponent(objectName)
         }
     }
 
