@@ -20,10 +20,6 @@ class NamedEntity {
 
 export class Model {
     cards: Array<Card>;
-
-    static getDefaultValuesObject() {
-        return new this();
-    }
 }
 
 export class Card extends NamedEntity implements IFormattingSettingsCard {
@@ -35,7 +31,7 @@ export class Card extends NamedEntity implements IFormattingSettingsCard {
     /** if true, this card should be populated into the analytics pane */
     analyticsPane?: boolean;
 
-    getFormattingCard?(objectName: string, group: visuals.FormattingGroup, localizationManager?: powerbi.extensibility.ILocalizationManager) {
+    getFormattingCard?(objectName: string, group: visuals.FormattingGroup, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingCard {
         return {
             displayName: (localizationManager && this.displayNameKey)
                 ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName,
