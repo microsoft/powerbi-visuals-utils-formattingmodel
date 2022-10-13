@@ -12,6 +12,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "powerbi-visuals-api": "~5.0.0"
+    "powerbi-visuals-api": "~5.1.0"
   }
 }
