@@ -20,9 +20,11 @@ jobs:
       run: gh release edit $TAG_NAME --draft=true
       env:
         TAG_NAME: ${{ github.event.release.tag_name }}
-    - name: Run npm install
-      run: npm i
-    - run: zip -r release.zip src CHANGELOG.md LICENSE package-lock.json package.json README.md
+    - name: Run npm install and build
+      run: |
+        npm i
+        npm run build
+    - run: zip -r release.zip lib CHANGELOG.md LICENSE package-lock.json package.json README.md
     - name: Upload production artifacts
       run: |
         gh release upload $TAG_NAME "release.zip#release"
