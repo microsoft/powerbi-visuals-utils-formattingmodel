@@ -132,7 +132,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
 
             formattingModel.cards.push(formattingCard);
         });
-console.log(formattingModel);
+
     return formattingModel;
     }
 
