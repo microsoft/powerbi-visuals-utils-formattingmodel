@@ -11,7 +11,7 @@
     "build": "tsc"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "powerbi-visuals-api": "~5.1.0"
   }

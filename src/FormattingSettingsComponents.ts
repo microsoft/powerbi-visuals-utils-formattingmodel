@@ -5,7 +5,7 @@
 
 import powerbi from "powerbi-visuals-api";
 
-import { IFormattingSettingsCard, IFormattingSettingsSlice } from "./FormattingSettingsInterfaces";
+import { IFormattingSettingsCard, IFormattingSettingsGroup, IFormattingSettingsSlice } from "./FormattingSettingsInterfaces";
 import * as FormattingSettingsParser from "./utils/FormattingSettingsUtils";
 
 import data = powerbi.data;
@@ -19,18 +19,79 @@ class NamedEntity {
 }
 
 export class Model {
-    cards: Array<Card>;
+    cards: Array<Card | CompositeCard>;
 }
 
-export class Card extends NamedEntity implements IFormattingSettingsCard {
+export abstract class CompositeCard extends NamedEntity {
     /** name should be the exact same object name from capabilities objects that this formatting card is representing */
     name: string;
+
+    abstract groups: Array<Group>;
+
+    analyticsPane?: boolean;
+}
+
+export class Group<T = any> extends NamedEntity implements IFormattingSettingsGroup {
+    constructor(object: Group<any>) {
+        super();
+        Object.assign(this, object);
+    }
+
+    /** name should be the exact same object name from capabilities objects that this formatting card is representing */
+    name: string;
+
     slices?: Array<Slice>;
     container?: Container;
+
+    topLevelToggle?: powerbi.visuals.EnabledSlice;
+
+    disabled?: boolean;
+    /** group disabled reason */
+    disabledReason?: string;
+    /**
+             * If delaySaveSlices is true, then this group's slices' value changes won't be saved to the visual until a
+             * signal action is taken. E.g., for an Analytics Pane forecast, the forecast parameter values shouldn't be
+             * saved to the visual until the Apply button is clicked. Note that this applies to all slices in the group.
+             */
+    delaySaveSlices?: boolean;
+    /** Group can expand/collapse */
+    collapsible?: boolean;
+
+    /**
+     * Returns the formatting group.
+     * 
+     * To be used as an entry point for dynamic formatting groups.
+     */
+    getFormattingGroup?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingGroup {
+        return {
+            displayName: (localizationManager && this.displayNameKey)
+                ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName,
+            description: (localizationManager && this.descriptionKey)
+                ? localizationManager.getDisplayName(this.descriptionKey) : this.description,
+            slices: [],
+            topLevelToggle: this.topLevelToggle,
+            uid: this.name + "-group",
+            collapsible: this.collapsible,
+            delaySaveSlices: this.delaySaveSlices,
+            disabled: this.disabled,
+            disabledReason: this.disabledReason,
+        }
+    }
+}
+
+export class Card extends Group implements IFormattingSettingsCard {
+    constructor() {
+        super({ name: undefined });
+    }
 
     /** if true, this card should be populated into the analytics pane */
     analyticsPane?: boolean;
 
+     /**
+     * Returns the formatting card with single group.
+     * 
+     * To be used as an entry point for dynamic formatting cards.
+     */
     getFormattingCard?(objectName: string, group: visuals.FormattingGroup, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingCard {
         return {
             displayName: (localizationManager && this.displayNameKey)
@@ -38,11 +99,16 @@ export class Card extends NamedEntity implements IFormattingSettingsCard {
             description: (localizationManager && this.descriptionKey)
                 ? localizationManager.getDisplayName(this.descriptionKey) : this.description,
             groups: [group],
+            topLevelToggle: this.topLevelToggle,
             uid: objectName,
-            analyticsPane: this.analyticsPane
+            analyticsPane: this.analyticsPane,
+            disabled: this.disabled,
+            disabledReason: this.disabledReason,
         }
     }
 }
+
+export type Cards = Card | CompositeCard;
 
 export type Slice = SimpleSlice | CompositeSlice;
 
@@ -53,6 +119,8 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
     selector?: data.Selector;
     altConstantSelector?: data.Selector;
     instanceKind?: powerbi.VisualEnumerationInstanceKinds;
+
+    visible?: boolean;
 
     /** type declared in each slice sub class, No need to declare it in initializing object */
     type?: visuals.FormattingComponent;
@@ -372,6 +440,8 @@ export abstract class CompositeSlice extends NamedEntity implements IFormattingS
     name: string;
     type?: visuals.FormattingComponent;
 
+    visible?: boolean;
+
     constructor(object: CompositeSlice) {
         super();
         Object.assign(this, object);
@@ -479,7 +549,12 @@ export class MarginPadding extends CompositeSlice {
 }
 
 
-export class Container extends NamedEntity {
+export class Container<T = any> extends NamedEntity {
+    constructor(object: Container<any>) {
+        super();
+        Object.assign(this, object);
+    }
+
     containerItems: ContainerItem[];
     /**
      * Whether this container allows editing, including add/remove container items, and

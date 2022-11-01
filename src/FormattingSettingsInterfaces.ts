@@ -62,3 +62,7 @@ export interface IFormattingSettingsSlice {
 export interface IFormattingSettingsCard {
     getFormattingCard?(objectName: string, group: visuals.FormattingGroup, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingCard;
 }
+
+export interface IFormattingSettingsGroup {
+    getFormattingGroup?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingGroup;
+}
