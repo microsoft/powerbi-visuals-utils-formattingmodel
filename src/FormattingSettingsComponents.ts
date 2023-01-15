@@ -230,6 +230,22 @@ export class AutoDropdown extends SimpleSlice<powerbi.EnumMemberValue> {
     }
 }
 
+export class ConditionalFormattingControl extends SimpleSlice<powerbi.VisualObjectRepetition.VisualObjectRepetitionMetadata> {
+    displayName?: string;
+    type?= visuals.FormattingComponent.ConditionalFormattingControl;
+
+    constructor(object: ConditionalFormattingControl) {
+        super(object);
+    }
+
+    getFormattingComponent?(objectName: string): visuals.ConditionalFormattingControl {
+        return {
+            ... super.getFormattingComponent(objectName),
+            displayName: this.displayName
+        }
+    }
+}
+
 export class DurationPicker extends SimpleSlice<string> {
     validators?: {
         min?: string;
