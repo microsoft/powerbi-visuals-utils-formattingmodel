@@ -12,7 +12,7 @@ export interface IFormattingSettingsService {
      * @param dataViews metadata dataView object
      * @returns visual formatting settings model 
      */
-    populateFormattingSettingsModel<T extends Model>(typeClass: new () => T, dataViews: powerbi.DataView[]): T;
+    populateFormattingSettingsModel<T extends Model>(typeClass: new () => T, dataView: powerbi.DataView): T;
 
     /**
      * Build formatting model by parsing formatting settings model object 
@@ -64,5 +64,5 @@ export interface IFormattingSettingsCard {
 }
 
 export interface IFormattingSettingsGroup {
-    getFormattingGroup?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingGroup;
+    getFormattingGroup?(localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingGroup;
 }

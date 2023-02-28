@@ -1,6 +1,6 @@
 import powerbi from "powerbi-visuals-api";
 import { formattingSettings } from ".";
-import { Card, Cards, Group, Model, Slice, ToggleSwitch } from "./FormattingSettingsComponents";
+import { Card, CardGroupEntity, Group, Model, SimpleCard, Slice, ToggleSwitch } from "./FormattingSettingsComponents";
 import { IFormattingSettingsService } from "./FormattingSettingsInterfaces";
 
 import visuals = powerbi.visuals;
@@ -19,19 +19,20 @@ export class FormattingSettingsService implements IFormattingSettingsService {
      * @param dataViews metadata dataView object
      * @returns visual formatting settings model 
      */
-    public populateFormattingSettingsModel<T extends Model>(typeClass: new () => T, dataViews: powerbi.DataView[]): T {
+    public populateFormattingSettingsModel<T extends Model>(typeClass: new () => T, dataView: powerbi.DataView): T {
         let defaultSettings: T = new typeClass();
 
-        let dataViewObjects = dataViews?.[0]?.metadata?.objects;
+        let dataViewObjects = dataView?.metadata?.objects;
         if (dataViewObjects) {
             // loop over each formatting property and set its new value if exists
-            defaultSettings.cards?.forEach((card: Cards) => {
-                (card instanceof Card ? [ card ] : card.groups).forEach((group: Group) => {
-                    group?.slices?.forEach((slice: Slice) => {
+            defaultSettings.cards?.forEach((card: Card) => {
+                const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? [ card ] : card.groups);
+                cardGroupInstances.forEach((cardGroupInstance: CardGroupEntity) => {
+                    cardGroupInstance?.slices?.forEach((slice: Slice) => {
                         slice?.setPropertiesValues(dataViewObjects, card.name);
                     });
 
-                    group?.container?.containerItems?.forEach((containerItem: formattingSettings.ContainerItem) => {
+                    cardGroupInstance?.container?.containerItems?.forEach((containerItem: formattingSettings.ContainerItem) => {
                         containerItem?.slices?.forEach((slice: Slice) => {
                             slice?.setPropertiesValues(dataViewObjects, card.name);
                         });
@@ -53,87 +54,96 @@ export class FormattingSettingsService implements IFormattingSettingsService {
             cards: []
         }
         
-        formattingSettingsModel.cards.forEach((card: Cards) => {
-            if (!card)
-                return;
-            
-            const isSimpleCard = card instanceof Card;
-            let formattingCard: visuals.FormattingCard = {
-                displayName: card.displayName,
-                groups: [],
-                uid: card.name,
-                analyticsPane: card.analyticsPane,
-            };
-
-            const objectName = card.name;
-
-            (isSimpleCard ? [ card ] : card.groups).forEach((group: Group) => {
-                const groupUid = group.name + "-group";
-
-                let formattingGroup: visuals.FormattingGroup;
-
-                if (isSimpleCard) {
-                    formattingGroup = {
-                        displayName: isSimpleCard ? undefined : group.displayName,
-                        slices: [],
-                        uid: groupUid
-                    };
-                    formattingCard = card.getFormattingCard(objectName, formattingGroup, this.localizationManager);
-                } else {
-                    formattingGroup = group.getFormattingGroup(objectName, this.localizationManager);
-                    formattingCard.groups.push(formattingGroup);
-                }
+        formattingSettingsModel.cards
+            .filter((card: Card) => card.visible ?? true)
+            .forEach((card: Card) => {
+                if (!card)
+                    return;
                 
-                // In case formatting model adds data points or top categories (Like when you modify specific visual category color).
-                // these categories use same object name and property name from capabilities and the generated uid will be the same for these formatting categories properties
-                // Solution => Save slice names to modify each slice uid to be unique by adding counter value to the new slice uid
-                const sliceNames: { [name: string]: number } = {};
+                const isSimpleCard = card instanceof SimpleCard;
+                let formattingCard: visuals.FormattingCard = {
+                    displayName: (this.localizationManager && card.displayNameKey) ? this.localizationManager.getDisplayName(card.displayNameKey) : card.displayName,
+                    description: (this.localizationManager && card.descriptionKey) ? this.localizationManager.getDisplayName(card.descriptionKey) : card.description,
+                    groups: [],
+                    uid: card.name + "-card",
+                    analyticsPane: card.analyticsPane,
+                };
 
-                // Build formatting container slice for each property
-                if (group.container) {
-                    const container = group.container;
-                    const containerUid = groupUid + "-container";
-                    const formattingContainer: visuals.FormattingContainer = {
-                        displayName: (this.localizationManager && container.displayNameKey)
-                            ? this.localizationManager.getDisplayName(container.displayNameKey) : container.displayName,
-                        description: (this.localizationManager && container.descriptionKey)
-                            ? this.localizationManager.getDisplayName(container.descriptionKey) : container.description,
-                        containerItems: [],
-                        uid: containerUid
-                    }
+                const objectName = card.name;
 
-                    container.containerItems.forEach((containerItem: formattingSettings.ContainerItem) => {
-                        // Build formatting container item object
-                        const containerIemName = containerItem.displayNameKey ? containerItem.displayNameKey : containerItem.displayName;
-                        const containerItemUid: string = containerUid + containerIemName;
-                        let formattingContainerItem: visuals.FormattingContainerItem = {
-                            displayName: (this.localizationManager && containerItem.displayNameKey)
-                                ? this.localizationManager.getDisplayName(containerItem.displayNameKey) : containerItem.displayName,
-                            slices: [],
-                            uid: containerItemUid
+                card.onPreProcess && card.onPreProcess();
+
+                const cardGroupInstances = <CardGroupEntity[]>(isSimpleCard ? 
+                    [ card ].filter((group: SimpleCard) => group.visible ?? true) : 
+                    card.groups.filter((group: Group) => group.visible ?? true));
+                cardGroupInstances
+                    .forEach((cardGroupInstance: CardGroupEntity, index: number) => {
+                        const groupUid = cardGroupInstance.name + "-group";
+                        
+                        let formattingGroup: visuals.FormattingGroup;
+
+                        if (isSimpleCard) {
+                            formattingGroup = {
+                                displayName: cardGroupInstance.displayName,
+                                slices: [],
+                                uid: groupUid
+                            };
+                            formattingCard = (<SimpleCard>card).getFormattingCard(objectName, formattingGroup, this.localizationManager);
+                        } else {
+                            formattingGroup = (<Group>cardGroupInstance).getFormattingGroup(this.localizationManager);
+                            formattingCard.groups.push(formattingGroup);
+                        }
+                        
+                        // In case formatting model adds data points or top categories (Like when you modify specific visual category color).
+                        // these categories use same object name and property name from capabilities and the generated uid will be the same for these formatting categories properties
+                        // Solution => Save slice names to modify each slice uid to be unique by adding counter value to the new slice uid
+                        const sliceNames: { [name: string]: number } = {};
+
+                        // Build formatting container slice for each property
+                        if (cardGroupInstance.container) {
+                            const container = cardGroupInstance.container;
+                            const containerUid = groupUid + "-container";
+                            const formattingContainer: visuals.FormattingContainer = {
+                                displayName: (this.localizationManager && container.displayNameKey)
+                                    ? this.localizationManager.getDisplayName(container.displayNameKey) : container.displayName,
+                                description: (this.localizationManager && container.descriptionKey)
+                                    ? this.localizationManager.getDisplayName(container.descriptionKey) : container.description,
+                                containerItems: [],
+                                uid: containerUid
+                            }
+
+                            container.containerItems.forEach((containerItem: formattingSettings.ContainerItem) => {
+                                // Build formatting container item object
+                                const containerIemName = containerItem.displayNameKey ? containerItem.displayNameKey : containerItem.displayName;
+                                const containerItemUid: string = containerUid + containerIemName;
+                                let formattingContainerItem: visuals.FormattingContainerItem = {
+                                    displayName: (this.localizationManager && containerItem.displayNameKey)
+                                        ? this.localizationManager.getDisplayName(containerItem.displayNameKey) : containerItem.displayName,
+                                    slices: [],
+                                    uid: containerItemUid
+                                }
+
+                                // Build formatting slices and add them to current formatting container item
+                                this.buildFormattingSlices(containerItem.slices, objectName, sliceNames, index === 0 ? formattingCard : formattingGroup, formattingContainerItem.slices);
+                                formattingContainer.containerItems.push(formattingContainerItem);
+                            });
+
+                            formattingGroup.container = formattingContainer;
                         }
 
-                        // Build formatting slices and add them to current formatting container item
-                        this.buildFormattingSlices(containerItem.slices, objectName, sliceNames, isSimpleCard ? formattingCard : formattingGroup, formattingContainerItem.slices);
-                        formattingContainer.containerItems.push(formattingContainerItem);
+                        if (cardGroupInstance.slices) {
+                            // Build formatting slice for each property
+                            this.buildFormattingSlices(cardGroupInstance.slices, objectName, sliceNames, index === 0 ? formattingCard : formattingGroup, formattingGroup.slices as visuals.FormattingSlice[]);
+                        }
+
                     });
 
-                    formattingGroup.container = formattingContainer;
-                }
+                formattingCard.revertToDefaultDescriptors = this.getRevertToDefaultDescriptor(card);
 
-                if (group.slices) {
-                    // Build formatting slice for each property
-                    this.buildFormattingSlices(group.slices, objectName, sliceNames, isSimpleCard ? formattingCard : formattingGroup, formattingGroup.slices as visuals.FormattingSlice[]);
-                }
-
+                formattingModel.cards.push(formattingCard);
             });
 
-            formattingCard.revertToDefaultDescriptors = this.getRevertToDefaultDescriptor(card);
-
-            formattingModel.cards.push(formattingCard);
-        });
-
-    return formattingModel;
+        return formattingModel;
     }
 
     private buildFormattingSlices(slices: formattingSettings.Slice[], objectName: string, sliceNames: { [name: string]: number; }, parent: visuals.FormattingCard | visuals.FormattingGroup, formattingSlices: visuals.FormattingSlice[]) {
@@ -162,7 +172,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         });
     }
 
-    private getRevertToDefaultDescriptor(card: Cards): visuals.FormattingDescriptor[] {
+    private getRevertToDefaultDescriptor(card: Card): visuals.FormattingDescriptor[] {
         // Proceeded slice names are saved to prevent duplicated default descriptors in case of using 
         // formatting categories & selectors, since they have the same descriptor objectName and propertyName
         const sliceNames: { [name: string]: boolean } = {};
@@ -170,10 +180,11 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         let cardSlicesDefaultDescriptors: visuals.FormattingDescriptor[]
         let cardContainerSlicesDefaultDescriptors: visuals.FormattingDescriptor[] = [];
 
-        (card instanceof Card ? [ card ] : card.groups).forEach((group: Group) => {
-            cardSlicesDefaultDescriptors = this.getSlicesRevertToDefaultDescriptor(card.name, group.slices, sliceNames);
+        const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? [ card ] : card.groups)
+        cardGroupInstances.forEach((cardGroupInstance: CardGroupEntity) => {
+            cardSlicesDefaultDescriptors = this.getSlicesRevertToDefaultDescriptor(card.name, cardGroupInstance.slices, sliceNames);
 
-            group.container?.containerItems?.forEach((containerItem: formattingSettings.ContainerItem) => {
+            cardGroupInstance.container?.containerItems?.forEach((containerItem: formattingSettings.ContainerItem) => {
                 cardContainerSlicesDefaultDescriptors = cardContainerSlicesDefaultDescriptors.concat(
                     this.getSlicesRevertToDefaultDescriptor(card.name, containerItem.slices, sliceNames))
             });
