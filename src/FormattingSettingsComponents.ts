@@ -18,25 +18,7 @@ class NamedEntity {
     descriptionKey?: string;
 }
 
-export class Model {
-    cards: Array<Card | CompositeCard>;
-}
-
-export abstract class CompositeCard extends NamedEntity {
-    /** name should be the exact same object name from capabilities objects that this formatting card is representing */
-    name: string;
-
-    abstract groups: Array<Group>;
-
-    analyticsPane?: boolean;
-}
-
-export class Group<T = any> extends NamedEntity implements IFormattingSettingsGroup {
-    constructor(object: Group<any>) {
-        super();
-        Object.assign(this, object);
-    }
-
+export class CardGroupEntity extends NamedEntity {
     /** name should be the exact same object name from capabilities objects that this formatting card is representing */
     name: string;
 
@@ -49,20 +31,45 @@ export class Group<T = any> extends NamedEntity implements IFormattingSettingsGr
     /** group disabled reason */
     disabledReason?: string;
     /**
-             * If delaySaveSlices is true, then this group's slices' value changes won't be saved to the visual until a
-             * signal action is taken. E.g., for an Analytics Pane forecast, the forecast parameter values shouldn't be
-             * saved to the visual until the Apply button is clicked. Note that this applies to all slices in the group.
-             */
+     * If delaySaveSlices is true, then this group's slices' value changes won't be saved to the visual until a
+     * signal action is taken. E.g., for an Analytics Pane forecast, the forecast parameter values shouldn't be
+     * saved to the visual until the Apply button is clicked. Note that this applies to all slices in the group.
+     */
     delaySaveSlices?: boolean;
     /** Group can expand/collapse */
     collapsible?: boolean;
+    /** if true, this group will be populated into the formatting pane */
+    visible?: boolean;
+}
 
-    /**
-     * Returns the formatting group.
-     * 
-     * To be used as an entry point for dynamic formatting groups.
-     */
-    getFormattingGroup?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingGroup {
+export class Model {
+    cards: Array<Card>;
+}
+
+/** CompositeCard is use to populate a card into the formatting pane with multiple group */
+export abstract class CompositeCard extends NamedEntity {
+    /** name should be the exact same object name from capabilities objects that this formatting card is representing */
+    name: string;
+
+    abstract groups: Array<Group>;
+    /** if true, this card will be populated into the formatting pane */
+    visible?: boolean;
+    /** if true, this card should be populated into the analytics pane */
+    analyticsPane?: boolean;
+    /** 
+     * Called before the card is populated. 
+     * This is useful for setting the card's slices' visibility before the card is populated into the formatting pane.
+    */
+    onPreProcess?(): void;
+}
+
+export class Group extends CardGroupEntity implements IFormattingSettingsGroup {
+    constructor(object: Group) {
+        super();
+        Object.assign(this, object);
+    }
+
+    getFormattingGroup?(localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingGroup {
         return {
             displayName: (localizationManager && this.displayNameKey)
                 ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName,
@@ -79,19 +86,16 @@ export class Group<T = any> extends NamedEntity implements IFormattingSettingsGr
     }
 }
 
-export class Card extends Group implements IFormattingSettingsCard {
-    constructor() {
-        super({ name: undefined });
-    }
-
+/** SimpleCard is use to populate a card into the formatting pane in a single group */
+export class SimpleCard extends CardGroupEntity implements IFormattingSettingsCard {
     /** if true, this card should be populated into the analytics pane */
     analyticsPane?: boolean;
+    /** 
+     * Called before the card is populated. 
+     * This is useful for setting the card's slices' visibility before the card is populated into the formatting pane.
+    */
+    onPreProcess?(): void;
 
-     /**
-     * Returns the formatting card with single group.
-     * 
-     * To be used as an entry point for dynamic formatting cards.
-     */
     getFormattingCard?(objectName: string, group: visuals.FormattingGroup, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingCard {
         return {
             displayName: (localizationManager && this.displayNameKey)
@@ -100,7 +104,7 @@ export class Card extends Group implements IFormattingSettingsCard {
                 ? localizationManager.getDisplayName(this.descriptionKey) : this.description,
             groups: [group],
             topLevelToggle: this.topLevelToggle,
-            uid: objectName,
+            uid: objectName + "-card",
             analyticsPane: this.analyticsPane,
             disabled: this.disabled,
             disabledReason: this.disabledReason,
@@ -108,7 +112,7 @@ export class Card extends Group implements IFormattingSettingsCard {
     }
 }
 
-export type Cards = Card | CompositeCard;
+export type Card = SimpleCard | CompositeCard;
 
 export type Slice = SimpleSlice | CompositeSlice;
 
@@ -119,7 +123,7 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
     selector?: data.Selector;
     altConstantSelector?: data.Selector;
     instanceKind?: powerbi.VisualEnumerationInstanceKinds;
-
+    /** if true, this slice will be populated into the formatting pane */
     visible?: boolean;
 
     /** type declared in each slice sub class, No need to declare it in initializing object */
@@ -410,6 +414,10 @@ export class ImageUpload extends SimpleSlice<powerbi.ImageValue> {
 }
 
 export class ListEditor extends SimpleSlice<visuals.ListEditorValue> {
+    constructor(object: ListEditor) {
+        super(object);
+    }
+
     type?= visuals.FormattingComponent.ListEditor;
 }
 
@@ -549,8 +557,8 @@ export class MarginPadding extends CompositeSlice {
 }
 
 
-export class Container<T = any> extends NamedEntity {
-    constructor(object: Container<any>) {
+export class Container extends NamedEntity {
+    constructor(object: Container) {
         super();
         Object.assign(this, object);
     }
