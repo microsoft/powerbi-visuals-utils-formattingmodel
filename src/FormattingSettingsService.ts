@@ -59,7 +59,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
             .forEach((card: Card) => {
                 if (!card)
                     return;
-                
+
                 const isSimpleCard = card instanceof SimpleCard;
                 let formattingCard: visuals.FormattingCard = {
                     displayName: (this.localizationManager && card.displayNameKey) ? this.localizationManager.getDisplayName(card.displayNameKey) : card.displayName,
@@ -80,19 +80,8 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                     .forEach((cardGroupInstance: CardGroupEntity, index: number) => {
                         const groupUid = cardGroupInstance.name + "-group";
                         
-                        let formattingGroup: visuals.FormattingGroup;
-
-                        if (isSimpleCard) {
-                            formattingGroup = {
-                                displayName: cardGroupInstance.displayName,
-                                slices: [],
-                                uid: groupUid
-                            };
-                            formattingCard = (<SimpleCard>card).getFormattingCard(objectName, formattingGroup, this.localizationManager);
-                        } else {
-                            formattingGroup = (<Group>cardGroupInstance).getFormattingGroup(this.localizationManager);
-                            formattingCard.groups.push(formattingGroup);
-                        }
+                        const formattingGroup = cardGroupInstance.getFormattingGroup(this.localizationManager);
+                        formattingCard.groups.push(formattingGroup);
                         
                         // In case formatting model adds data points or top categories (Like when you modify specific visual category color).
                         // these categories use same object name and property name from capabilities and the generated uid will be the same for these formatting categories properties
@@ -180,7 +169,9 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         let cardSlicesDefaultDescriptors: visuals.FormattingDescriptor[]
         let cardContainerSlicesDefaultDescriptors: visuals.FormattingDescriptor[] = [];
 
-        const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? [ card ] : card.groups)
+        const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? 
+            [ card ].filter((group: SimpleCard) => group.visible ?? true) : 
+            card.groups.filter((group: Group) => group.visible ?? true));
         cardGroupInstances.forEach((cardGroupInstance: CardGroupEntity) => {
             cardSlicesDefaultDescriptors = this.getSlicesRevertToDefaultDescriptor(card.name, cardGroupInstance.slices, sliceNames);
 
