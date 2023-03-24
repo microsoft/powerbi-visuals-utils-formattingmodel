@@ -25,8 +25,6 @@ export class CardGroupEntity extends NamedEntity {
     slices?: Array<Slice>;
     container?: Container;
 
-    topLevelToggle?: powerbi.visuals.EnabledSlice;
-
     disabled?: boolean;
     /** group disabled reason */
     disabledReason?: string;
@@ -40,6 +38,22 @@ export class CardGroupEntity extends NamedEntity {
     collapsible?: boolean;
     /** if true, this group will be populated into the formatting pane */
     visible?: boolean;
+
+    getFormattingGroup?(localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingGroup {
+        const isSimpleCard = this instanceof SimpleCard
+        return {
+            displayName: isSimpleCard ? undefined : (localizationManager && this.displayNameKey)
+                ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName,
+            description: isSimpleCard ? undefined : (localizationManager && this.descriptionKey)
+                ? localizationManager.getDisplayName(this.descriptionKey) : this.description,
+            slices: [],
+            uid: this.name + "-group",
+            collapsible: this.collapsible,
+            delaySaveSlices: this.delaySaveSlices,
+            disabled: this.disabled,
+            disabledReason: this.disabledReason,
+        }
+    }
 }
 
 export class Model {
@@ -56,6 +70,7 @@ export abstract class CompositeCard extends NamedEntity {
     visible?: boolean;
     /** if true, this card should be populated into the analytics pane */
     analyticsPane?: boolean;
+
     /** 
      * Called before the card is populated. 
      * This is useful for setting the card's slices' visibility before the card is populated into the formatting pane.
@@ -68,22 +83,6 @@ export class Group extends CardGroupEntity implements IFormattingSettingsGroup {
         super();
         Object.assign(this, object);
     }
-
-    getFormattingGroup?(localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingGroup {
-        return {
-            displayName: (localizationManager && this.displayNameKey)
-                ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName,
-            description: (localizationManager && this.descriptionKey)
-                ? localizationManager.getDisplayName(this.descriptionKey) : this.description,
-            slices: [],
-            topLevelToggle: this.topLevelToggle,
-            uid: this.name + "-group",
-            collapsible: this.collapsible,
-            delaySaveSlices: this.delaySaveSlices,
-            disabled: this.disabled,
-            disabledReason: this.disabledReason,
-        }
-    }
 }
 
 /** SimpleCard is use to populate a card into the formatting pane in a single group */
@@ -95,7 +94,7 @@ export class SimpleCard extends CardGroupEntity implements IFormattingSettingsCa
      * This is useful for setting the card's slices' visibility before the card is populated into the formatting pane.
     */
     onPreProcess?(): void;
-
+    
     getFormattingCard?(objectName: string, group: visuals.FormattingGroup, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingCard {
         return {
             displayName: (localizationManager && this.displayNameKey)
@@ -103,7 +102,6 @@ export class SimpleCard extends CardGroupEntity implements IFormattingSettingsCa
             description: (localizationManager && this.descriptionKey)
                 ? localizationManager.getDisplayName(this.descriptionKey) : this.description,
             groups: [group],
-            topLevelToggle: this.topLevelToggle,
             uid: objectName + "-card",
             analyticsPane: this.analyticsPane,
             disabled: this.disabled,
