@@ -5,7 +5,7 @@
 
 import powerbi from "powerbi-visuals-api";
 
-import { IFormattingSettingsCard, IFormattingSettingsGroup, IFormattingSettingsSlice } from "./FormattingSettingsInterfaces";
+import { IFormattingSettingsSlice } from "./FormattingSettingsInterfaces";
 import * as FormattingSettingsParser from "./utils/FormattingSettingsUtils";
 
 import data = powerbi.data;
@@ -38,29 +38,15 @@ export class CardGroupEntity extends NamedEntity {
     collapsible?: boolean;
     /** if true, this group will be populated into the formatting pane */
     visible?: boolean;
-
-    getFormattingGroup?(localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingGroup {
-        const isSimpleCard = this instanceof SimpleCard
-        return {
-            displayName: isSimpleCard ? undefined : (localizationManager && this.displayNameKey)
-                ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName,
-            description: isSimpleCard ? undefined : (localizationManager && this.descriptionKey)
-                ? localizationManager.getDisplayName(this.descriptionKey) : this.description,
-            slices: [],
-            uid: this.name + "-group",
-            collapsible: this.collapsible,
-            delaySaveSlices: this.delaySaveSlices,
-            disabled: this.disabled,
-            disabledReason: this.disabledReason,
-        }
-    }
+    /** Slice, usually a ToggleSwitch, to be rendered at the top of the card/group */
+    topLevelSlice?: SimpleSlice;
 }
 
 export class Model {
     cards: Array<Card>;
 }
 
-/** CompositeCard is use to populate a card into the formatting pane with multiple group */
+/** CompositeCard is use to populate a card into the formatting pane with multiple groups */
 export abstract class CompositeCard extends NamedEntity {
     /** name should be the exact same object name from capabilities objects that this formatting card is representing */
     name: string;
@@ -70,7 +56,8 @@ export abstract class CompositeCard extends NamedEntity {
     visible?: boolean;
     /** if true, this card should be populated into the analytics pane */
     analyticsPane?: boolean;
-
+    /** Slice, usually a ToggleSwitch, to be rendered at the top of the card/group */
+    topLevelSlice?: SimpleSlice;
     /** 
      * Called before the card is populated. 
      * This is useful for setting the card's slices' visibility before the card is populated into the formatting pane.
@@ -78,7 +65,7 @@ export abstract class CompositeCard extends NamedEntity {
     onPreProcess?(): void;
 }
 
-export class Group extends CardGroupEntity implements IFormattingSettingsGroup {
+export class Group extends CardGroupEntity {
     constructor(object: Group) {
         super();
         Object.assign(this, object);
@@ -86,7 +73,7 @@ export class Group extends CardGroupEntity implements IFormattingSettingsGroup {
 }
 
 /** SimpleCard is use to populate a card into the formatting pane in a single group */
-export class SimpleCard extends CardGroupEntity implements IFormattingSettingsCard {
+export class SimpleCard extends CardGroupEntity {
     /** if true, this card should be populated into the analytics pane */
     analyticsPane?: boolean;
     /** 
@@ -94,20 +81,6 @@ export class SimpleCard extends CardGroupEntity implements IFormattingSettingsCa
      * This is useful for setting the card's slices' visibility before the card is populated into the formatting pane.
     */
     onPreProcess?(): void;
-    
-    getFormattingCard?(objectName: string, group: visuals.FormattingGroup, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingCard {
-        return {
-            displayName: (localizationManager && this.displayNameKey)
-                ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName,
-            description: (localizationManager && this.descriptionKey)
-                ? localizationManager.getDisplayName(this.descriptionKey) : this.description,
-            groups: [group],
-            uid: objectName + "-card",
-            analyticsPane: this.analyticsPane,
-            disabled: this.disabled,
-            disabledReason: this.disabledReason,
-        }
-    }
 }
 
 export type Card = SimpleCard | CompositeCard;
@@ -192,8 +165,6 @@ export class AlignmentGroup extends SimpleSlice<string> {
 }
 
 export class ToggleSwitch extends SimpleSlice<boolean> {
-    topLevelToggle?: boolean;
-
     type?= visuals.FormattingComponent.ToggleSwitch;
 
     constructor(object: ToggleSwitch) {

@@ -58,11 +58,3 @@ export interface IFormattingSettingsSlice {
      */
     setPropertiesValues?(dataViewObjects: powerbi.DataViewObjects, objectName: string): void;
 }
-
-export interface IFormattingSettingsCard {
-    getFormattingCard?(objectName: string, group: visuals.FormattingGroup, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingCard;
-}
-
-export interface IFormattingSettingsGroup {
-    getFormattingGroup?(localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingGroup;
-}
