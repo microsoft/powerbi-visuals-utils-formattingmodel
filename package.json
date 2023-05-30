@@ -1,6 +1,6 @@
 {
   "name": "powerbi-visuals-utils-formattingmodel",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "description": "",
   "main": "lib/index.js",
   "module": "lib/index.js",
