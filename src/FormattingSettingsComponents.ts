@@ -377,12 +377,12 @@ export abstract class CompositeSlice extends NamedEntity implements IFormattingS
         Object.assign(this, object);
     }
 
-    getFormattingSlice?(objectName: string): visuals.CompositeVisualFormattingSlice {
+    getFormattingSlice?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.CompositeVisualFormattingSlice {
         const controlType = this.type;
         const propertyName = this.name;
         const componentDisplayName = {
-            displayName: this.displayName,
-            description: this.description,
+            displayName: (localizationManager && this.displayNameKey) ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName,
+            description: (localizationManager && this.descriptionKey) ? localizationManager.getDisplayName(this.descriptionKey) : this.description,
             uid: objectName + '-' + propertyName,
         };
 
