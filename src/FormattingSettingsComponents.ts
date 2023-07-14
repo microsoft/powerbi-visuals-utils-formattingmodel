@@ -383,10 +383,6 @@ export class ImageUpload extends SimpleSlice<powerbi.ImageValue> {
 }
 
 export class ListEditor extends SimpleSlice<visuals.ListEditorValue> {
-    constructor(object: ListEditor) {
-        super(object);
-    }
-
     type?= visuals.FormattingComponent.ListEditor;
 }
 
