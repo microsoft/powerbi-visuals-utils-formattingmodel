@@ -1,7 +1,7 @@
 import powerbi from "powerbi-visuals-api";
 import { formattingSettings } from ".";
 import { Card, CardGroupEntity, CompositeCard, Group, Model, SimpleCard, Slice } from "./FormattingSettingsComponents";
-import { IFormattingSettingsService } from "./FormattingSettingsInterfaces";
+import { IBuildFormattingSlicesParams, IFormattingSettingsService } from "./FormattingSettingsInterfaces";
 
 import visuals = powerbi.visuals;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
@@ -59,12 +59,8 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         }
         
         formattingSettingsModel.cards
-            .filter((card: Card) => card.visible ?? true)
+            .filter(({visible = true}) => visible)
             .forEach((card: Card) => {
-                if (!card)
-                    return;
-
-                const isSimpleCard = card instanceof SimpleCard;
                 let formattingCard: visuals.FormattingCard = {
                     displayName: (this.localizationManager && card.displayNameKey) ? this.localizationManager.getDisplayName(card.displayNameKey) : card.displayName,
                     description: (this.localizationManager && card.descriptionKey) ? this.localizationManager.getDisplayName(card.descriptionKey) : card.description,
@@ -81,13 +77,14 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                     formattingCard.topLevelToggle = (<visuals.EnabledSlice>topLevelToggleSlice);
                 }
 
-                card.onPreProcess && card.onPreProcess();
+                card.onPreProcess?.();
 
+                const isSimpleCard = card instanceof SimpleCard;
                 const cardGroupInstances = <CardGroupEntity[]>(isSimpleCard ? 
-                    [ card ].filter((group: SimpleCard) => group.visible ?? true) : 
-                    card.groups.filter((group: Group) => group.visible ?? true));
+                    [ card ].filter(({visible = true}) => visible) : 
+                    card.groups.filter(({visible = true}) => visible));
                 cardGroupInstances
-                    .forEach((cardGroupInstance: CardGroupEntity, index: number) => {
+                    .forEach((cardGroupInstance: CardGroupEntity) => {
                         const groupUid = cardGroupInstance.name + "-group";
 
                         // Build formatting group for each group
@@ -135,7 +132,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                                 }
 
                                 // Build formatting slices and add them to current formatting container item
-                                this.buildFormattingSlices(containerItem.slices, objectName, sliceNames, formattingGroup.displayName==undefined ? formattingCard : formattingGroup, formattingContainerItem.slices);
+                                this.buildFormattingSlices({slices: containerItem.slices, objectName, sliceNames, formattingSlices: formattingContainerItem.slices});
                                 formattingContainer.containerItems.push(formattingContainerItem);
                             });
 
@@ -149,7 +146,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                                 (formattingGroup.displayName==undefined ? formattingCard : formattingGroup).topLevelToggle = (<visuals.EnabledSlice>topLevelToggleSlice);
                             }
                             // Build formatting slice for each property
-                            this.buildFormattingSlices(cardGroupInstance.slices, objectName, sliceNames, formattingGroup.displayName==undefined ? formattingCard : formattingGroup, formattingGroup.slices as visuals.FormattingSlice[]);
+                            this.buildFormattingSlices({slices: cardGroupInstance.slices, objectName, sliceNames, formattingSlices: formattingGroup.slices as visuals.FormattingSlice[]});
                         }
 
                     });
@@ -162,9 +159,9 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         return formattingModel;
     }
 
-    private buildFormattingSlices(slices: formattingSettings.Slice[], objectName: string, sliceNames: { [name: string]: number; }, parent: visuals.FormattingCard | visuals.FormattingGroup, formattingSlices: visuals.FormattingSlice[]) {
+    private buildFormattingSlices({slices, objectName, sliceNames, formattingSlices }: IBuildFormattingSlicesParams) {
         // Filter slices based on their visibility
-        slices?.filter((slice: Slice) => slice.visible ?? true)
+        slices?.filter(({visible = true}) => visible)
             .forEach((slice: Slice) => {
             let formattingSlice: visuals.FormattingSlice = slice?.getFormattingSlice(objectName, this.localizationManager);
 
@@ -193,8 +190,8 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         if (card instanceof CompositeCard && card.topLevelSlice) revertToDefaultDescriptors.push(...card.topLevelSlice?.getRevertToDefaultDescriptor(card.name));
 
         const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? 
-            [ card ].filter((group: SimpleCard) => group.visible ?? true) : 
-            card.groups.filter((group: Group) => group.visible ?? true));
+            [ card ].filter(({visible = true}) => visible) : 
+            card.groups.filter(({visible = true}) => visible));
         cardGroupInstances.forEach((cardGroupInstance: CardGroupEntity) => {
             cardSlicesDefaultDescriptors = this.getSlicesRevertToDefaultDescriptor(card.name, cardGroupInstance.slices, sliceNames, cardGroupInstance.topLevelSlice);
 

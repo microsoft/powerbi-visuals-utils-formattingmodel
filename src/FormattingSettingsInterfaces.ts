@@ -1,6 +1,6 @@
 
 import powerbi from "powerbi-visuals-api";
-import { Model } from "./FormattingSettingsComponents";
+import { Model, Slice } from "./FormattingSettingsComponents";
 
 import visuals = powerbi.visuals;
 
@@ -57,4 +57,11 @@ export interface IFormattingSettingsSlice {
      * @param objectName Object name from capabilities
      */
     setPropertiesValues?(dataViewObjects: powerbi.DataViewObjects, objectName: string): void;
+}
+
+export interface IBuildFormattingSlicesParams {
+    slices: Slice[], 
+    objectName: string, 
+    sliceNames: { [name: string]: number; },
+    formattingSlices: visuals.FormattingSlice[]
 }
