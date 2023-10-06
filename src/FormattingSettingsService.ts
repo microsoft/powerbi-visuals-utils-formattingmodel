@@ -1,6 +1,6 @@
 import powerbi from "powerbi-visuals-api";
 import { formattingSettings } from ".";
-import { Card, CardGroupEntity, CompositeCard, Group, Model, SimpleCard, Slice } from "./FormattingSettingsComponents";
+import { Cards, CardGroupEntity, CompositeCard, Group, Model, SimpleCard, Slice } from "./FormattingSettingsComponents";
 import { IBuildFormattingSlicesParams, IFormattingSettingsService } from "./FormattingSettingsInterfaces";
 
 import visuals = powerbi.visuals;
@@ -25,7 +25,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         let dataViewObjects = dataView?.metadata?.objects;
         if (dataViewObjects) {
             // loop over each formatting property and set its new value if exists
-            defaultSettings.cards?.forEach((card: Card) => {
+            defaultSettings.cards?.forEach((card: Cards) => {
                 if (card instanceof CompositeCard) card.topLevelSlice?.setPropertiesValues(dataViewObjects, card.name);
 
                 const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? [ card ] : card.groups);
@@ -60,7 +60,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         
         formattingSettingsModel.cards
             .filter(({visible = true}) => visible)
-            .forEach((card: Card) => {
+            .forEach((card: Cards) => {
                 let formattingCard: visuals.FormattingCard = {
                     displayName: (this.localizationManager && card.displayNameKey) ? this.localizationManager.getDisplayName(card.displayNameKey) : card.displayName,
                     description: (this.localizationManager && card.descriptionKey) ? this.localizationManager.getDisplayName(card.descriptionKey) : card.description,
@@ -179,7 +179,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         });
     }
 
-    private getRevertToDefaultDescriptor(card: Card): visuals.FormattingDescriptor[] {
+    private getRevertToDefaultDescriptor(card: Cards): visuals.FormattingDescriptor[] {
         // Proceeded slice names are saved to prevent duplicated default descriptors in case of using 
         // formatting categories & selectors, since they have the same descriptor objectName and propertyName
         const sliceNames: { [name: string]: boolean } = {};

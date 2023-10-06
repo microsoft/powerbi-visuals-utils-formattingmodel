@@ -43,7 +43,7 @@ export class CardGroupEntity extends NamedEntity {
 }
 
 export class Model {
-    cards: Array<Card>;
+    cards: Array<Cards>;
 }
 
 /** CompositeCard is use to populate a card into the formatting pane with multiple groups */
@@ -83,7 +83,7 @@ export class SimpleCard extends CardGroupEntity {
     onPreProcess?(): void;
 }
 
-export type Card = SimpleCard | CompositeCard;
+export type Cards = SimpleCard | CompositeCard;
 
 export type Slice = SimpleSlice | CompositeSlice;
 
