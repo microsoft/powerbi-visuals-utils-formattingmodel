@@ -5,7 +5,7 @@
 
 import powerbi from "powerbi-visuals-api";
 
-import { IFormattingSettingsCard, IFormattingSettingsSlice } from "./FormattingSettingsInterfaces";
+import { IFormattingSettingsSlice } from "./FormattingSettingsInterfaces";
 import * as FormattingSettingsParser from "./utils/FormattingSettingsUtils";
 
 import data = powerbi.data;
@@ -18,31 +18,72 @@ class NamedEntity {
     descriptionKey?: string;
 }
 
-export class Model {
-    cards: Array<Card>;
-}
-
-export class Card extends NamedEntity implements IFormattingSettingsCard {
+export class CardGroupEntity extends NamedEntity {
     /** name should be the exact same object name from capabilities objects that this formatting card is representing */
     name: string;
+
     slices?: Array<Slice>;
     container?: Container;
 
+    disabled?: boolean;
+    /** group disabled reason */
+    disabledReason?: string;
+    /**
+     * If delaySaveSlices is true, then this group's slices' value changes won't be saved to the visual until a
+     * signal action is taken. E.g., for an Analytics Pane forecast, the forecast parameter values shouldn't be
+     * saved to the visual until the Apply button is clicked. Note that this applies to all slices in the group.
+     */
+    delaySaveSlices?: boolean;
+    /** Group can expand/collapse */
+    collapsible?: boolean;
+    /** if true, this group will be populated into the formatting pane */
+    visible?: boolean;
+    /** Slice, usually a ToggleSwitch, to be rendered at the top of the card/group */
+    topLevelSlice?: SimpleSlice;
+}
+
+export class Model {
+    cards: Array<Cards>;
+}
+
+/** CompositeCard is use to populate a card into the formatting pane with multiple groups */
+export abstract class CompositeCard extends NamedEntity {
+    /** name should be the exact same object name from capabilities objects that this formatting card is representing */
+    name: string;
+
+    abstract groups: Array<Group>;
+    /** if true, this card will be populated into the formatting pane */
+    visible?: boolean;
     /** if true, this card should be populated into the analytics pane */
     analyticsPane?: boolean;
+    /** Slice, usually a ToggleSwitch, to be rendered at the top of the card/group */
+    topLevelSlice?: SimpleSlice;
+    /** 
+     * Called before the card is populated. 
+     * This is useful for setting the card's slices' visibility before the card is populated into the formatting pane.
+    */
+    onPreProcess?(): void;
+}
 
-    getFormattingCard?(objectName: string, group: visuals.FormattingGroup, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingCard {
-        return {
-            displayName: (localizationManager && this.displayNameKey)
-                ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName,
-            description: (localizationManager && this.descriptionKey)
-                ? localizationManager.getDisplayName(this.descriptionKey) : this.description,
-            groups: [group],
-            uid: objectName,
-            analyticsPane: this.analyticsPane
-        }
+export class Group extends CardGroupEntity {
+    constructor(object: Group) {
+        super();
+        Object.assign(this, object);
     }
 }
+
+/** SimpleCard is use to populate a card into the formatting pane in a single group */
+export class SimpleCard extends CardGroupEntity {
+    /** if true, this card should be populated into the analytics pane */
+    analyticsPane?: boolean;
+    /** 
+     * Called before the card is populated. 
+     * This is useful for setting the card's slices' visibility before the card is populated into the formatting pane.
+    */
+    onPreProcess?(): void;
+}
+
+export type Cards = SimpleCard | CompositeCard;
 
 export type Slice = SimpleSlice | CompositeSlice;
 
@@ -53,6 +94,8 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
     selector?: data.Selector;
     altConstantSelector?: data.Selector;
     instanceKind?: powerbi.VisualEnumerationInstanceKinds;
+    /** if true, this slice will be populated into the formatting pane */
+    visible?: boolean;
 
     /** type declared in each slice sub class, No need to declare it in initializing object */
     type?: visuals.FormattingComponent;
@@ -122,8 +165,6 @@ export class AlignmentGroup extends SimpleSlice<string> {
 }
 
 export class ToggleSwitch extends SimpleSlice<boolean> {
-    topLevelToggle?: boolean;
-
     type?= visuals.FormattingComponent.ToggleSwitch;
 
     constructor(object: ToggleSwitch) {
@@ -372,6 +413,8 @@ export abstract class CompositeSlice extends NamedEntity implements IFormattingS
     name: string;
     type?: visuals.FormattingComponent;
 
+    visible?: boolean;
+
     constructor(object: CompositeSlice) {
         super();
         Object.assign(this, object);
@@ -480,6 +523,11 @@ export class MarginPadding extends CompositeSlice {
 
 
 export class Container extends NamedEntity {
+    constructor(object: Container) {
+        super();
+        Object.assign(this, object);
+    }
+
     containerItems: ContainerItem[];
     /**
      * Whether this container allows editing, including add/remove container items, and

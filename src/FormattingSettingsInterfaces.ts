@@ -1,6 +1,6 @@
 
 import powerbi from "powerbi-visuals-api";
-import { Model } from "./FormattingSettingsComponents";
+import { Model, Slice } from "./FormattingSettingsComponents";
 
 import visuals = powerbi.visuals;
 
@@ -12,7 +12,7 @@ export interface IFormattingSettingsService {
      * @param dataViews metadata dataView object
      * @returns visual formatting settings model 
      */
-    populateFormattingSettingsModel<T extends Model>(typeClass: new () => T, dataViews: powerbi.DataView[]): T;
+    populateFormattingSettingsModel<T extends Model>(typeClass: new () => T, dataView: powerbi.DataView): T;
 
     /**
      * Build formatting model by parsing formatting settings model object 
@@ -59,6 +59,9 @@ export interface IFormattingSettingsSlice {
     setPropertiesValues?(dataViewObjects: powerbi.DataViewObjects, objectName: string): void;
 }
 
-export interface IFormattingSettingsCard {
-    getFormattingCard?(objectName: string, group: visuals.FormattingGroup, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.FormattingCard;
+export interface IBuildFormattingSlicesParams {
+    slices: Slice[], 
+    objectName: string, 
+    sliceNames: { [name: string]: number; },
+    formattingSlices: visuals.FormattingSlice[]
 }
