@@ -13,14 +13,16 @@ Initializing formatting settings service:
 ```typescript
 import { FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel";
 
-// declaring formatting settings service 
-private formattingSettingsService: FormattingSettingsService;
+export class MyVisual implements IVisual {
+    // declaring formatting settings service 
+    private formattingSettingsService: FormattingSettingsService;
 
-constructor(options: VisualConstructorOptions) {
-    
-    this.formattingSettingsService = new FormattingSettingsService();
-    
-    // ...
+    constructor(options: VisualConstructorOptions) {
+        
+        this.formattingSettingsService = new FormattingSettingsService();
+        
+        // ...
+    }
 }
 ```
 
@@ -74,8 +76,11 @@ export class VisualSettingsModel extends FormattingSettingsModel {
 ## Formatting settings card
 
 A *formatting settings card* specifies a formatting card in the formatting or analytics pane. A formatting settings card can contain multiple formatting slices, containers, groups, and properties.
-Adding slices to a formatting settings card puts all of these slices into one formatting group.
+
+Adding slices to a formatting settings card puts all of these slices into one formatting card.
+
 Cards, Slices and Groups can be hidden dynamically by setting the `visible` parameter to *false* (*true* by default)
+
 The card can populate either the formatting pane or analytics pane by setting the `analyticsPane` parameter to *true* or *false*.
 
 Example declaring formatting settings card, including one formatting settings group and slice:
@@ -132,8 +137,8 @@ class myVisualCardSettings extends FormattingSettingsCompositeCard {
     analyticsPane: boolean = false;
     visible: boolean = true;
 
-    myVisualGroup = new myVisualGroupSettings(Object())
-    groups: FormattingSettingsGroup[] = [this.myVisualGroup]
+    groupSetting = new myVisualGroupSettings(Object())
+    groups: Array<FormattingSettingsGroup> = [this.groupSetting]
     slices: Array<FormattingSettingsSlice> = [this.myNumericSlice];
 }
 ```
