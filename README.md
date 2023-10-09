@@ -194,9 +194,9 @@ class myVisualGroupSettings extends FormattingSettingsGroup {
 
 ## Formatting settings slice
 
-The formatting settings slice type consists of two types of slices - [simple and composite](./format-pane.md#formatting-model-components).
+The formatting settings slice type consists of two types of slices - [simple and composite](https://learn.microsoft.com/en-us/power-bi/developer/visuals/format-pane#formatting-model-components).
 
-Each slice contains formatting properties. There's a long list of available [formatting properties types](./format-pane.md#visualization-pane-formatting-properties).
+Each slice contains formatting properties. There's a long list of available [formatting properties types](https://learn.microsoft.com/en-us/power-bi/developer/visuals/format-pane#visualization-pane-formatting-properties).
 
 Example declaring formatting settings slice of type `NumUpDown` with limitations:
 
@@ -317,7 +317,7 @@ The slice name should match property name from *capabilities.json*.
 
 ## Formatting property selector
 
-The optional selector in the formatting properties descriptor determines where each property is bound in the dataView. There are [four distinct options](./objects-properties.md#objects-selectors-types).
+The optional selector in the formatting properties descriptor determines where each property is bound in the dataView. There are [four distinct options](https://learn.microsoft.com/en-us/power-bi/developer/visuals/objects-properties?tabs=getFormattingModel#objects-selectors-types).
 
 You can add selector to formatting property in its descriptor object.
 This example is taken from the [SampleBarChart](https://github.com/microsoft/PowerBI-visuals-sampleBarChart) for color custom visual data points using property selectors:
@@ -335,7 +335,7 @@ new formattingSettings.ColorPicker({
 
 ## Reset settings to default
 
-Formatting model utils will enable you to [reset settings to default](./format-pane.md#reset-settings-to-default) by automatically adding all the formatting properties descriptors to the formatting card list of features to revet to default descriptors `revertToDefaultDescriptors`.
+Formatting model utils will enable you to [reset settings to default](https://learn.microsoft.com/en-us/power-bi/developer/visuals/format-pane#reset-settings-to-default) by automatically adding all the formatting properties descriptors to the formatting card list of features to revet to default descriptors `revertToDefaultDescriptors`.
 
 You can enable resetting formatting settings from:
 
@@ -349,7 +349,7 @@ You can enable resetting formatting settings from:
 
 ## Localization
 
-For more about the localization feature and to set up localization environment, see [Add the local language to your Power BI visual](localization.md).
+For more about the localization feature and to set up localization environment, see [Add the local language to your Power BI visual](https://learn.microsoft.com/en-us/power-bi/developer/visuals/localization).
 
 Init formatting settings service with localization manager in case localization is required in your custom visual:
 
