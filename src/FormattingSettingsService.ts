@@ -103,17 +103,6 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                         }
                         formattingCard.groups.push(formattingGroup);
 
-                        // In case formatting model adds data points or top categories (Like when you modify specific visual category color).
-                        // these categories use same object name and property name from capabilities and the generated uid will be the same for these formatting categories properties
-                        // Solution => Save slice names to modify each slice uid to be unique by adding counter value to the new slice uid
-                        const sliceNames: { [name: string]: number } = {};
-
-                        // creating slices using same uid as described above is ok at this stage, powerbi identify the specific slice by the selector.
-                        // so the correct thing to do is to provide a unique selector for each datapoint if needed.
-                        // We are keeping sliceNames for backward compatibility.
-                        // This map helps us to check if we need to change the uid
-                        const selectorsMap: Record<string, { [selector: string]: boolean }> = {}
-
                         // Build formatting container slice for each property
                         if (cardGroupInstance.container) {
                             const container = cardGroupInstance.container;
@@ -139,7 +128,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                                 }
 
                                 // Build formatting slices and add them to current formatting container item
-                                this.buildFormattingSlices({ slices: containerItem.slices, objectName, sliceNames, selectorsMap, formattingSlices: formattingContainerItem.slices });
+                                this.buildFormattingSlices({ slices: containerItem.slices, objectName, formattingSlices: formattingContainerItem.slices });
                                 formattingContainer.containerItems.push(formattingContainerItem);
                             });
 
@@ -153,7 +142,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                                 (formattingGroup.displayName == undefined ? formattingCard : formattingGroup).topLevelToggle = (<visuals.EnabledSlice>topLevelToggleSlice);
                             }
                             // Build formatting slice for each property
-                            this.buildFormattingSlices({ slices: cardGroupInstance.slices, objectName, sliceNames, selectorsMap, formattingSlices: formattingGroup.slices as visuals.FormattingSlice[] });
+                            this.buildFormattingSlices({ slices: cardGroupInstance.slices, objectName, formattingSlices: formattingGroup.slices as visuals.FormattingSlice[] });
                         }
 
                     });
@@ -166,7 +155,17 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         return formattingModel;
     }
 
-    private buildFormattingSlices({ slices, objectName, sliceNames, selectorsMap, formattingSlices }: IBuildFormattingSlicesParams) {
+    private buildFormattingSlices({ slices, objectName, formattingSlices }: IBuildFormattingSlicesParams) {
+        // In case formatting model adds data points or top categories (Like when you modify specific visual category color).
+        // these categories use same object name and property name from capabilities and the generated uid will be the same for these formatting categories properties
+        // Solution => Save slice names to modify each slice uid to be unique by adding counter value to the new slice uid
+        const sliceNames: { [name: string]: number } = {};
+
+        // We are also supporting slices with the same name if they differ in the selector field (not the altConstantSelector).
+        // If the slices with the same name have different selectors we keep the uid as is, else we change it.
+        // We recommend using different selectors in the selector field for slices with the same name.
+        const selectorsMap: Record<string, { [selector: string]: boolean }> = {}
+
         // Filter slices based on their visibility
         slices?.filter(({ visible = true }) => visible)
             .forEach((slice: Slice) => {
