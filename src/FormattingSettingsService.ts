@@ -1,10 +1,11 @@
 import powerbi from "powerbi-visuals-api";
+
+import { Cards, CardGroupEntity, CompositeCard, Model, SimpleCard, Slice, SimpleSlice } from "./FormattingSettingsComponents";
 import { formattingSettings } from ".";
-import { Cards, CardGroupEntity, CompositeCard, Group, Model, SimpleCard, Slice } from "./FormattingSettingsComponents";
 import { IBuildFormattingSlicesParams, IFormattingSettingsService } from "./FormattingSettingsInterfaces";
 
-import visuals = powerbi.visuals;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
+import visuals = powerbi.visuals;
 
 export class FormattingSettingsService implements IFormattingSettingsService {
     private localizationManager: ILocalizationManager;
@@ -28,7 +29,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
             defaultSettings.cards?.forEach((card: Cards) => {
                 if (card instanceof CompositeCard) card.topLevelSlice?.setPropertiesValues(dataViewObjects, card.name);
 
-                const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? [ card ] : card.groups);
+                const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? [card] : card.groups);
                 cardGroupInstances.forEach((cardGroupInstance: CardGroupEntity) => {
                     // Set current top level toggle value
                     cardGroupInstance.topLevelSlice?.setPropertiesValues(dataViewObjects, card.name);
@@ -57,9 +58,9 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         let formattingModel = {
             cards: []
         }
-        
+
         formattingSettingsModel.cards
-            .filter(({visible = true}) => visible)
+            .filter(({ visible = true }) => visible)
             .forEach((card: Cards) => {
                 let formattingCard: visuals.FormattingCard = {
                     displayName: (this.localizationManager && card.displayNameKey) ? this.localizationManager.getDisplayName(card.displayNameKey) : card.displayName,
@@ -80,32 +81,38 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                 card.onPreProcess?.();
 
                 const isSimpleCard = card instanceof SimpleCard;
-                const cardGroupInstances = <CardGroupEntity[]>(isSimpleCard ? 
-                    [ card ].filter(({visible = true}) => visible) : 
-                    card.groups.filter(({visible = true}) => visible));
+                const cardGroupInstances = <CardGroupEntity[]>(isSimpleCard ?
+                    [card].filter(({ visible = true }) => visible) :
+                    card.groups.filter(({ visible = true }) => visible));
                 cardGroupInstances
                     .forEach((cardGroupInstance: CardGroupEntity) => {
                         const groupUid = cardGroupInstance.name + "-group";
 
                         // Build formatting group for each group
                         const formattingGroup: visuals.FormattingGroup = {
-                                displayName: isSimpleCard ? undefined : (this.localizationManager && cardGroupInstance.displayNameKey)
-                                    ? this.localizationManager.getDisplayName(cardGroupInstance.displayNameKey) : cardGroupInstance.displayName,
-                                description: isSimpleCard ? undefined : (this.localizationManager && cardGroupInstance.descriptionKey)
-                                    ? this.localizationManager.getDisplayName(cardGroupInstance.descriptionKey) : cardGroupInstance.description,
-                                slices: [],
-                                uid: groupUid,
-                                collapsible: cardGroupInstance.collapsible,
-                                delaySaveSlices: cardGroupInstance.delaySaveSlices,
-                                disabled: cardGroupInstance.disabled,
-                                disabledReason: cardGroupInstance.disabledReason,
-                            }
+                            displayName: isSimpleCard ? undefined : (this.localizationManager && cardGroupInstance.displayNameKey)
+                                ? this.localizationManager.getDisplayName(cardGroupInstance.displayNameKey) : cardGroupInstance.displayName,
+                            description: isSimpleCard ? undefined : (this.localizationManager && cardGroupInstance.descriptionKey)
+                                ? this.localizationManager.getDisplayName(cardGroupInstance.descriptionKey) : cardGroupInstance.description,
+                            slices: [],
+                            uid: groupUid,
+                            collapsible: cardGroupInstance.collapsible,
+                            delaySaveSlices: cardGroupInstance.delaySaveSlices,
+                            disabled: cardGroupInstance.disabled,
+                            disabledReason: cardGroupInstance.disabledReason,
+                        }
                         formattingCard.groups.push(formattingGroup);
 
                         // In case formatting model adds data points or top categories (Like when you modify specific visual category color).
                         // these categories use same object name and property name from capabilities and the generated uid will be the same for these formatting categories properties
                         // Solution => Save slice names to modify each slice uid to be unique by adding counter value to the new slice uid
                         const sliceNames: { [name: string]: number } = {};
+
+                        // creating slices using same uid as described above is ok at this stage, powerbi identify the specific slice by the selector.
+                        // so the correct thing to do is to provide a unique selector for each datapoint if needed.
+                        // We are keeping sliceNames for backward compatibility.
+                        // This map helps us to check if we need to change the uid
+                        const selectorsMap: Record<string, { [selector: string]: boolean }> = {}
 
                         // Build formatting container slice for each property
                         if (cardGroupInstance.container) {
@@ -132,7 +139,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                                 }
 
                                 // Build formatting slices and add them to current formatting container item
-                                this.buildFormattingSlices({slices: containerItem.slices, objectName, sliceNames, formattingSlices: formattingContainerItem.slices});
+                                this.buildFormattingSlices({ slices: containerItem.slices, objectName, sliceNames, selectorsMap, formattingSlices: formattingContainerItem.slices });
                                 formattingContainer.containerItems.push(formattingContainerItem);
                             });
 
@@ -143,10 +150,10 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                             if (cardGroupInstance.topLevelSlice) {
                                 let topLevelToggleSlice: visuals.FormattingSlice = cardGroupInstance.topLevelSlice.getFormattingSlice(objectName, this.localizationManager);
                                 topLevelToggleSlice.suppressDisplayName = true;
-                                (formattingGroup.displayName==undefined ? formattingCard : formattingGroup).topLevelToggle = (<visuals.EnabledSlice>topLevelToggleSlice);
+                                (formattingGroup.displayName == undefined ? formattingCard : formattingGroup).topLevelToggle = (<visuals.EnabledSlice>topLevelToggleSlice);
                             }
                             // Build formatting slice for each property
-                            this.buildFormattingSlices({slices: cardGroupInstance.slices, objectName, sliceNames, formattingSlices: formattingGroup.slices as visuals.FormattingSlice[]});
+                            this.buildFormattingSlices({ slices: cardGroupInstance.slices, objectName, sliceNames, selectorsMap, formattingSlices: formattingGroup.slices as visuals.FormattingSlice[] });
                         }
 
                     });
@@ -159,24 +166,35 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         return formattingModel;
     }
 
-    private buildFormattingSlices({slices, objectName, sliceNames, formattingSlices }: IBuildFormattingSlicesParams) {
+    private buildFormattingSlices({ slices, objectName, sliceNames, selectorsMap, formattingSlices }: IBuildFormattingSlicesParams) {
         // Filter slices based on their visibility
-        slices?.filter(({visible = true}) => visible)
+        slices?.filter(({ visible = true }) => visible)
             .forEach((slice: Slice) => {
-            let formattingSlice: visuals.FormattingSlice = slice?.getFormattingSlice(objectName, this.localizationManager);
+                let formattingSlice: visuals.FormattingSlice = slice?.getFormattingSlice(objectName, this.localizationManager);
 
-            if (formattingSlice) {
-                // Modify formatting slice uid if needed
-                if (sliceNames[slice.name] === undefined) {
-                    sliceNames[slice.name] = 0;
-                } else {
-                    sliceNames[slice.name]++;
-                    formattingSlice.uid = `${formattingSlice.uid}-${sliceNames[slice.name]}`;
+                if (formattingSlice) {
+                    // Modify formatting slice uid if needed
+                    const sliceName = slice.name;
+                    const sliceSelector = (slice as SimpleSlice).selector;
+                    if (sliceNames[slice.name] === undefined) {
+                        selectorsMap[sliceName] = {};
+                        sliceNames[slice.name] = 0;
+                        if (sliceSelector) {
+                            selectorsMap[slice.name][JSON.stringify(sliceSelector)] = true;
+                        }
+                    } else {
+                        sliceNames[slice.name]++;
+                        const selectorExistsInMap = sliceSelector ? selectorsMap[slice.name][JSON.stringify(sliceSelector)] : undefined;
+                        if (sliceSelector && !selectorExistsInMap) {
+                            selectorsMap[slice.name][JSON.stringify(sliceSelector)] = true;
+                        } else {
+                            formattingSlice.uid = `${formattingSlice.uid}-${sliceNames[slice.name]}`;
+                        }
+                    }
+
+                    formattingSlices.push(formattingSlice);
                 }
-
-                formattingSlices.push(formattingSlice);
-            }
-        });
+            });
     }
 
     private getRevertToDefaultDescriptor(card: Cards): visuals.FormattingDescriptor[] {
@@ -189,9 +207,9 @@ export class FormattingSettingsService implements IFormattingSettingsService {
 
         if (card instanceof CompositeCard && card.topLevelSlice) revertToDefaultDescriptors.push(...card.topLevelSlice?.getRevertToDefaultDescriptor(card.name));
 
-        const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? 
-            [ card ].filter(({visible = true}) => visible) : 
-            card.groups.filter(({visible = true}) => visible));
+        const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ?
+            [card].filter(({ visible = true }) => visible) :
+            card.groups.filter(({ visible = true }) => visible));
         cardGroupInstances.forEach((cardGroupInstance: CardGroupEntity) => {
             cardSlicesDefaultDescriptors = this.getSlicesRevertToDefaultDescriptor(card.name, cardGroupInstance.slices, sliceNames, cardGroupInstance.topLevelSlice);
 

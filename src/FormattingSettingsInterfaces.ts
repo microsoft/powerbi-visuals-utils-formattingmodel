@@ -63,5 +63,6 @@ export interface IBuildFormattingSlicesParams {
     slices: Slice[], 
     objectName: string, 
     sliceNames: { [name: string]: number; },
+    selectorsMap: Record<string, { [selector: string]: boolean }>,
     formattingSlices: visuals.FormattingSlice[]
 }
