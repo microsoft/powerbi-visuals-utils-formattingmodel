@@ -1,3 +1,5 @@
+## 6.0.1
+* Update powerbi-visuals-api to 5.7.0
 
 ## 6.0.0
 * Added support for creating custom Formatting groups
