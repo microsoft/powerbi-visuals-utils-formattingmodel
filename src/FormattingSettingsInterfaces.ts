@@ -62,6 +62,5 @@ export interface IFormattingSettingsSlice {
 export interface IBuildFormattingSlicesParams {
     slices: Slice[], 
     objectName: string, 
-    sliceNames: { [name: string]: number; },
     formattingSlices: visuals.FormattingSlice[]
 }
