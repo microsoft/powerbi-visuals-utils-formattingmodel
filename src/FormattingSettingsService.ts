@@ -175,19 +175,20 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                     // Modify formatting slice uid if needed
                     const sliceName = slice.name;
                     const sliceSelector = (slice as SimpleSlice).selector;
-                    if (sliceNames[slice.name] === undefined) {
+                    const stringifiedSelector = sliceSelector ? JSON.stringify(sliceSelector) : '';
+                    if (sliceNames[sliceName] === undefined) {
                         selectorsMap[sliceName] = {};
-                        sliceNames[slice.name] = 0;
+                        sliceNames[sliceName] = 0;
                         if (sliceSelector) {
-                            selectorsMap[slice.name][JSON.stringify(sliceSelector)] = true;
+                            selectorsMap[sliceName][stringifiedSelector] = true;
                         }
                     } else {
-                        sliceNames[slice.name]++;
-                        const selectorExistsInMap = sliceSelector ? selectorsMap[slice.name][JSON.stringify(sliceSelector)] : undefined;
+                        sliceNames[sliceName]++;
+                        const selectorExistsInMap = stringifiedSelector && selectorsMap[sliceName][stringifiedSelector];
                         if (sliceSelector && !selectorExistsInMap) {
-                            selectorsMap[slice.name][JSON.stringify(sliceSelector)] = true;
+                            selectorsMap[sliceName][stringifiedSelector] = true;
                         } else {
-                            formattingSlice.uid = `${formattingSlice.uid}-${sliceNames[slice.name]}`;
+                            formattingSlice.uid = `${formattingSlice.uid}-${sliceNames[sliceName]}`;
                         }
                     }
 
