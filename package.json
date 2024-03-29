@@ -13,6 +13,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "powerbi-visuals-api": "~5.7.0"
+    "powerbi-visuals-api": "^5.9.0"
   }
 }
