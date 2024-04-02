@@ -1,3 +1,7 @@
+## 6.0.2
+* Update powerbi-visuals-api to 5.9.0
+* Add build.yml and codeql-analysis.yml
+
 ## 6.0.1
 * Update powerbi-visuals-api to 5.7.0
 
