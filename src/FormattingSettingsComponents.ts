@@ -124,7 +124,7 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
             },
         };
     }
-
+    // eslint-disable-next-line
     getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleComponentBase<any> {
         return {
             descriptor: FormattingSettingsParser.getDescriptor(objectName, this),
@@ -140,7 +140,7 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
     }
 
     setPropertiesValues?(dataViewObjects: powerbi.DataViewObjects, objectName: string): void {
-        let newValue = <T>dataViewObjects?.[objectName]?.[this.name]
+        const newValue = <T>dataViewObjects?.[objectName]?.[this.name]
         this.value = FormattingSettingsParser.getPropertyValue(this, newValue, this.value);
     }
 }

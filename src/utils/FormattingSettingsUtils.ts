@@ -39,7 +39,7 @@ export function getPropertyValue(slice: SimpleSlice, value: any, defaultValue: a
     }
 
     if ((slice as ItemDropdown)?.items) {
-        let itemsArray = (slice as ItemDropdown).items;
+        const itemsArray = (slice as ItemDropdown).items;
         return itemsArray.find(item => item.value == value);
     }
 
