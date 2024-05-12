@@ -29,7 +29,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                 if (card instanceof CompositeCard) card.topLevelSlice?.setPropertiesValues(dataViewObjects, card.name);
 
                 const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? [ card ] : card.groups);
-                cardGroupInstances.forEach((cardGroupInstance: CardGroupEntity) => {
+                cardGroupInstances?.forEach((cardGroupInstance: CardGroupEntity) => {
                     // Set current top level toggle value
                     cardGroupInstance.topLevelSlice?.setPropertiesValues(dataViewObjects, card.name);
                     cardGroupInstance?.slices?.forEach((slice: Slice) => {
