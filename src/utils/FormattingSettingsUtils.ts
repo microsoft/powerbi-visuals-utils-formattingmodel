@@ -38,7 +38,7 @@ export function getPropertyValue(slice: SimpleSlice, value: any, defaultValue: a
         return { value: (value as Fill)?.solid.color };
     }
 
-    if ((slice as ItemDropdown)?.items) {
+    if ((slice as ItemDropdown)?.items && slice.type !== visuals.FormattingComponent.FlagsSelection) {
         const itemsArray = (slice as ItemDropdown).items;
         return itemsArray.find(item => item.value == value);
     }
