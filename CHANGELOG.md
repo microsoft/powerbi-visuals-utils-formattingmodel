@@ -1,3 +1,6 @@
+## 6.0.3
+* Fix ItemFlagSelection unexpected behavior
+
 ## 6.0.2
 * Update powerbi-visuals-api to 5.9.0
 * Add build.yml and codeql-analysis.yml
