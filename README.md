@@ -35,7 +35,7 @@ Formatting settings service interface **IFormattingSettingsService** has two mai
      * @param dataViews metadata dataView object
      * @returns visual formatting settings model 
      */
-    populateFormattingSettingsModel<T extends Model>(typeClass: new () => T, dataViews: powerbi.DataView[]): T;
+    populateFormattingSettingsModel<T extends Model>(typeClass: new () => T, dataViews: powerbi.DataView): T;
 
     /**
      * Build formatting model by parsing formatting settings model object 
@@ -302,7 +302,7 @@ The slice name should match property name from *capabilities.json*.
 
  ```typescript
  public update(options: VisualUpdateOptions) {
-     this.formattingSettings = this.formattingSettingsService.populateFormattingSettingsModel(VisualFormattingSettingsModel, options.dataViews);
+     this.formattingSettings = this.formattingSettingsService.populateFormattingSettingsModel(VisualFormattingSettingsModel, options.dataViews[0]);
      // ...
  }
  ```
