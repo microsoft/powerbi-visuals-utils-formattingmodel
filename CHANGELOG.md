@@ -1,3 +1,6 @@
+## 6.0.4
+* Fix AutoDropDown issue
+
 ## 6.0.3
 * Fix ItemFlagSelection unexpected behavior
 
