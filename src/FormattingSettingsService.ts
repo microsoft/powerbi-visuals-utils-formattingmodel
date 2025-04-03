@@ -120,6 +120,9 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                             }
 
                             container.containerItems.forEach((containerItem: formattingSettings.ContainerItem) => {
+                                if(!containerItem) { // This is to prevent error when container item is null or undefined
+                                    return;
+                                }
                                 // Build formatting container item object
                                 const containerIemName = containerItem.displayNameKey ? containerItem.displayNameKey : containerItem.displayName;
                                 const containerItemUid: string = containerUid + containerIemName;
