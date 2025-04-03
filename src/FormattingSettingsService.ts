@@ -29,7 +29,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                 if (card instanceof CompositeCard) card.topLevelSlice?.setPropertiesValues(dataViewObjects, card.name);
 
                 const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? [ card ] : card.groups);
-                cardGroupInstances.forEach((cardGroupInstance: CardGroupEntity) => {
+                cardGroupInstances?.forEach((cardGroupInstance: CardGroupEntity) => {
                     // Set current top level toggle value
                     cardGroupInstance.topLevelSlice?.setPropertiesValues(dataViewObjects, card.name);
                     cardGroupInstance?.slices?.forEach((slice: Slice) => {
@@ -83,8 +83,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                 const cardGroupInstances = <CardGroupEntity[]>(isSimpleCard ? 
                     [ card ].filter(({visible = true}) => visible) : 
                     card.groups.filter(({visible = true}) => visible));
-                cardGroupInstances
-                    .forEach((cardGroupInstance: CardGroupEntity) => {
+                cardGroupInstances?.forEach((cardGroupInstance: CardGroupEntity) => {
                         const groupUid = cardGroupInstance.name + "-group";
 
                         // Build formatting group for each group
@@ -193,7 +192,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? 
             [ card ].filter(({visible = true}) => visible) : 
             card.groups.filter(({visible = true}) => visible));
-        cardGroupInstances.forEach((cardGroupInstance: CardGroupEntity) => {
+        cardGroupInstances?.forEach((cardGroupInstance: CardGroupEntity) => {
             cardSlicesDefaultDescriptors = this.getSlicesRevertToDefaultDescriptor(card.name, cardGroupInstance.slices, sliceNames, cardGroupInstance.topLevelSlice);
 
             cardGroupInstance.container?.containerItems?.forEach((containerItem: formattingSettings.ContainerItem) => {
