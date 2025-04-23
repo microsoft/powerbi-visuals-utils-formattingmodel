@@ -254,11 +254,11 @@ export class ItemDropdown extends SimpleSlice<powerbi.IEnumMember | ILocalizedIt
     getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.ItemDropdown {
         return {
             ... super.getFormattingComponent(objectName, localizationManager),
-            items: this.getFormtattingItems(localizationManager, this.items)
+            items: this.getFormatingItems(localizationManager, this.items)
         }
     }
 
-    getFormtattingItems?(localizationManager?: powerbi.extensibility.ILocalizationManager, items?: powerbi.IEnumMember[] | ILocalizedItemMember[]): powerbi.IEnumMember[] {
+    getFormatingItems?(localizationManager?: powerbi.extensibility.ILocalizationManager, items?: powerbi.IEnumMember[] | ILocalizedItemMember[]): powerbi.IEnumMember[] {
         return items.map((item) => {
             return {
                 ...item,
@@ -268,7 +268,7 @@ export class ItemDropdown extends SimpleSlice<powerbi.IEnumMember | ILocalizedIt
     }
 
     setValue?(value: powerbi.EnumMemberValue, localizationManager?: powerbi.extensibility.ILocalizationManager) {
-        const newValue = this.getFormtattingItems(localizationManager, this.items).find((item) => item.value === value);
+        const newValue = this.getFormatingItems(localizationManager, this.items).find((item) => item.value === value);
         this.value = newValue ? newValue : this.items[0];
     }
 }
