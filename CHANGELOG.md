@@ -1,3 +1,9 @@
+
+## 6.1.0
+* `ItemDropdown` now supports new interface `ILocalizedItemMember` for localization of dropdown items.
+* `ItemDropdown` got new method `setValue(value: powerbi.EnumMemberValue, localizationManager?: powerbi.extensibility.ILocalizationManager)` to set value by unique enum member value.
+* Fixed empty groups exception
+
 ## 6.0.4
 * Fix AutoDropDown issue
 

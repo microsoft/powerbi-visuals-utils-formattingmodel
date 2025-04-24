@@ -5,7 +5,7 @@
 
 import powerbi from "powerbi-visuals-api";
 
-import { IFormattingSettingsSlice } from "./FormattingSettingsInterfaces";
+import { IFormattingSettingsSlice, ILocalizedItemMember } from "./FormattingSettingsInterfaces";
 import * as FormattingSettingsParser from "./utils/FormattingSettingsUtils";
 
 import data = powerbi.data;
@@ -126,9 +126,16 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
     }
     // eslint-disable-next-line
     getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleComponentBase<any> {
+        let value: T | ILocalizedItemMember = this.value as ILocalizedItemMember;
+        if (value.displayNameKey) {
+            value = {
+                displayName: localizationManager?.getDisplayName(value.displayNameKey),
+                value: value.value
+            } as T;
+        }
         return {
             descriptor: FormattingSettingsParser.getDescriptor(objectName, this),
-            value: this.value,
+            value: value,
         }
     }
 
@@ -235,8 +242,8 @@ export class DatePicker extends SimpleSlice<Date> {
     }
 }
 
-export class ItemDropdown extends SimpleSlice<powerbi.IEnumMember> {
-    items: powerbi.IEnumMember[];
+export class ItemDropdown extends SimpleSlice<powerbi.IEnumMember | ILocalizedItemMember> {
+    items: powerbi.IEnumMember[] | ILocalizedItemMember[];
 
     type?= visuals.FormattingComponent.Dropdown;
 
@@ -244,11 +251,25 @@ export class ItemDropdown extends SimpleSlice<powerbi.IEnumMember> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.ItemDropdown {
+    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.ItemDropdown {
         return {
-            ... super.getFormattingComponent(objectName),
-            items: this.items
+            ... super.getFormattingComponent(objectName, localizationManager),
+            items: this.getFormattingItems(localizationManager, this.items)
         }
+    }
+
+    getFormattingItems?(localizationManager?: powerbi.extensibility.ILocalizationManager, items?: powerbi.IEnumMember[] | ILocalizedItemMember[]): powerbi.IEnumMember[] {
+        return items.map((item) => {
+            return {
+                ...item,
+                displayName: (localizationManager && item.displayNameKey) ? localizationManager.getDisplayName(item.displayNameKey) : item.displayName
+            }
+        })
+    }
+
+    setValue?(value: powerbi.EnumMemberValue, localizationManager?: powerbi.extensibility.ILocalizationManager) {
+        const newValue = this.getFormattingItems(localizationManager, this.items).find((item) => item.value === value);
+        this.value = newValue ? newValue : this.items[0];
     }
 }
 

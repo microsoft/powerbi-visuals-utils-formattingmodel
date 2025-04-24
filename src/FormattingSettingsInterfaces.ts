@@ -65,3 +65,8 @@ export interface IBuildFormattingSlicesParams {
     sliceNames: { [name: string]: number; },
     formattingSlices: visuals.FormattingSlice[]
 }
+
+export interface ILocalizedItemMember{
+    displayNameKey: string;
+    value: powerbi.EnumMemberValue;
+}
