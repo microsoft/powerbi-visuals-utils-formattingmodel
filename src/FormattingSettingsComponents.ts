@@ -127,7 +127,7 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
     // eslint-disable-next-line
     getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleComponentBase<any> {
         let value: T | ILocalizedItemMember = this.value as ILocalizedItemMember;
-        if (value.displayNameKey) {
+        if (value?.displayNameKey) {
             value = {
                 displayName: localizationManager?.getDisplayName(value.displayNameKey),
                 value: value.value
