@@ -1,5 +1,5 @@
 import powerbi from "powerbi-visuals-api";
-import { ItemDropdown, SimpleSlice } from "../FormattingSettingsComponents";
+import { ItemDropdown, SimpleSlice, NamedEntity } from "../FormattingSettingsComponents";
 
 import Fill = powerbi.Fill;
 import visuals = powerbi.visuals;
@@ -12,13 +12,18 @@ import visuals = powerbi.visuals;
  * @returns simple slice formatting descriptor
  */
 export function getDescriptor(objectName: string, slice: SimpleSlice): visuals.FormattingDescriptor {
-    return {
+    const res = {
         objectName: objectName,
         propertyName: slice.name,
         selector: slice.selector,
         altConstantValueSelector: slice.altConstantSelector,
-        instanceKind: slice.instanceKind
+        instanceKind: slice.instanceKind,
+        displayName: "smth"
     };
+    if(res.instanceKind === powerbi.VisualEnumerationInstanceKinds.ConstantOrRule) {
+        debugger
+    }
+    return res;
 }
 
 /**
@@ -44,4 +49,10 @@ export function getPropertyValue(slice: SimpleSlice, value: any, defaultValue: a
     }
 
     return value;
+}
+
+
+    
+export function getLocalizaedProperty<T extends NamedEntity>(item: T, property: keyof T, localizationManager?: powerbi.extensibility.ILocalizationManager): string | undefined {
+    return (localizationManager && item[property.toString() + "Key"]) ? localizationManager.getDisplayName(item[property.toString() + "Key"]) : item[property]?.toString();
 }
