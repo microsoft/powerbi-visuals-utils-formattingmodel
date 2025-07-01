@@ -12,18 +12,13 @@ import visuals = powerbi.visuals;
  * @returns simple slice formatting descriptor
  */
 export function getDescriptor(objectName: string, slice: SimpleSlice): visuals.FormattingDescriptor {
-    const res = {
+    return {
         objectName: objectName,
         propertyName: slice.name,
         selector: slice.selector,
         altConstantValueSelector: slice.altConstantSelector,
-        instanceKind: slice.instanceKind,
-        displayName: "smth"
+        instanceKind: slice.instanceKind
     };
-    if(res.instanceKind === powerbi.VisualEnumerationInstanceKinds.ConstantOrRule) {
-        debugger
-    }
-    return res;
 }
 
 /**

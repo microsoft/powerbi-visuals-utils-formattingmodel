@@ -1,6 +1,6 @@
 import powerbi from "powerbi-visuals-api";
 import { formattingSettings } from ".";
-import { Cards, CardGroupEntity, CompositeCard, Model, SimpleCard, Slice, NamedEntity, Group } from "./FormattingSettingsComponents";
+import { Cards, CardGroupEntity, CompositeCard, Model, SimpleCard, Slice } from "./FormattingSettingsComponents";
 import { IBuildFormattingSlicesParams, IFormattingSettingsService } from "./FormattingSettingsInterfaces";
 
 import visuals = powerbi.visuals;
