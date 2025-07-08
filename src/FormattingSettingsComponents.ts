@@ -7,7 +7,7 @@ import powerbi from "powerbi-visuals-api";
 
 import { IFormattingSettingsSlice, ILocalizedItemMember } from "./FormattingSettingsInterfaces";
 import * as FormattingSettingsParser from "./utils/FormattingSettingsUtils";
-import { getLocalizaedProperty } from "./utils/FormattingSettingsUtils";
+import { getLocalizedProperty } from "./utils/FormattingSettingsUtils";
 
 import data = powerbi.data;
 import visuals = powerbi.visuals;
@@ -119,8 +119,8 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
     getFormattingSlice?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleVisualFormattingSlice {
         const controlType = this.type;
         const propertyName = this.name;
-        const sliceDisplayName = getLocalizaedProperty(this, "displayName", localizationManager);
-        const sliceDescription = getLocalizaedProperty(this, "description", localizationManager);
+        const sliceDisplayName = getLocalizedProperty(this, "displayName", localizationManager);
+        const sliceDescription = getLocalizedProperty(this, "description", localizationManager);
         const componentDisplayName = {
             displayName: sliceDisplayName,
             description: sliceDescription,
@@ -134,7 +134,7 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
                 properties: this.getFormattingComponent(objectName, localizationManager)
             },
             disabled: this.disabled,
-            disabledReason: getLocalizaedProperty(this, "disabledReason", localizationManager),
+            disabledReason: getLocalizedProperty(this, "disabledReason", localizationManager),
         };
     }
     // eslint-disable-next-line
@@ -249,7 +249,7 @@ export class DatePicker extends SimpleSlice<Date> {
     getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.DatePicker {
         return {
             ... super.getFormattingComponent(objectName),
-            placeholder: getLocalizaedProperty(this, "placeholder", localizationManager),
+            placeholder: getLocalizedProperty(this, "placeholder", localizationManager),
             validators: this.validators
         }
     }
@@ -275,7 +275,7 @@ export class ItemDropdown extends SimpleSlice<powerbi.IEnumMember | ILocalizedIt
         return items.map((item) => {
             return {
                 ...item,
-                displayName: getLocalizaedProperty(item, "displayName", localizationManager)
+                displayName: getLocalizedProperty(item, "displayName", localizationManager)
             }
         })
     }
@@ -461,8 +461,8 @@ export abstract class CompositeSlice extends NamedEntity implements IFormattingS
         const controlType = this.type;
         const propertyName = this.name;
         const componentDisplayName = {
-            displayName: getLocalizaedProperty(this, "displayName", localizationManager),
-            description: getLocalizaedProperty(this, "description", localizationManager),
+            displayName: getLocalizedProperty(this, "displayName", localizationManager),
+            description: getLocalizedProperty(this, "description", localizationManager),
             uid: objectName + '-' + propertyName,
         };
 
