@@ -48,6 +48,6 @@ export function getPropertyValue(slice: SimpleSlice, value: any, defaultValue: a
 
 
     
-export function getLocalizaedProperty<T extends NamedEntity>(item: T, property: keyof T, localizationManager?: powerbi.extensibility.ILocalizationManager): string | undefined {
+export function getLocalizedProperty<T extends NamedEntity>(item: T, property: keyof T, localizationManager?: powerbi.extensibility.ILocalizationManager): string | undefined {
     return (localizationManager && item[property.toString() + "Key"]) ? localizationManager.getDisplayName(item[property.toString() + "Key"]) : item[property]?.toString();
 }
