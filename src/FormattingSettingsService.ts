@@ -5,7 +5,7 @@ import { IBuildFormattingSlicesParams, IFormattingSettingsService } from "./Form
 
 import visuals = powerbi.visuals;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
-import { getLocalizaedProperty } from "./utils/FormattingSettingsUtils";
+import { getLocalizedProperty } from "./utils/FormattingSettingsUtils";
 
 export class FormattingSettingsService implements IFormattingSettingsService {
     private localizationManager: ILocalizationManager;
@@ -69,10 +69,10 @@ export class FormattingSettingsService implements IFormattingSettingsService {
             .filter(({visible = true}) => visible)
             .forEach((card: Cards) => {
                 const formattingCard: visuals.FormattingCard = {
-                    displayName: getLocalizaedProperty(card, "displayName", this.localizationManager),
-                    description: getLocalizaedProperty(card, "description", this.localizationManager),
+                    displayName: getLocalizedProperty(card, "displayName", this.localizationManager),
+                    description: getLocalizedProperty(card, "description", this.localizationManager),
                     disabled: card.disabled,
-                    disabledReason: getLocalizaedProperty(card, "disabledReason", this.localizationManager),
+                    disabledReason: getLocalizedProperty(card, "disabledReason", this.localizationManager),
                     groups: [],
                     uid: card.name + "-card",
                     analyticsPane: card.analyticsPane,
@@ -104,14 +104,14 @@ export class FormattingSettingsService implements IFormattingSettingsService {
 
         // Build formatting group for each group
         const formattingGroup: visuals.FormattingGroup = {
-            displayName: isSimpleCard ? undefined : getLocalizaedProperty(cardGroupInstance, "displayName", this.localizationManager),
-            description: isSimpleCard ? undefined : getLocalizaedProperty(cardGroupInstance, "description", this.localizationManager),
+            displayName: isSimpleCard ? undefined : getLocalizedProperty(cardGroupInstance, "displayName", this.localizationManager),
+            description: isSimpleCard ? undefined : getLocalizedProperty(cardGroupInstance, "description", this.localizationManager),
             slices: [],
             uid: groupUid,
             collapsible: cardGroupInstance.collapsible,
             delaySaveSlices: cardGroupInstance.delaySaveSlices,
             disabled: cardGroupInstance.disabled,
-            disabledReason: getLocalizaedProperty(cardGroupInstance, "disabledReason", this.localizationManager),
+            disabledReason: getLocalizedProperty(cardGroupInstance, "disabledReason", this.localizationManager),
         }
         // In case formatting model adds data points or top categories (Like when you modify specific visual category color).
         // these categories use same object name and property name from capabilities and the generated uid will be the same for these formatting categories properties
@@ -138,8 +138,8 @@ export class FormattingSettingsService implements IFormattingSettingsService {
 
     private buildContainerGroupInstance(container: formattingSettings.Container, containerUid: string, objectName: string, sliceNames: { [name: string]: number }): visuals.FormattingContainer {
         const formattingContainer: visuals.FormattingContainer = {
-            displayName: getLocalizaedProperty(container, "displayName", this.localizationManager),
-            description: getLocalizaedProperty(container, "description", this.localizationManager),
+            displayName: getLocalizedProperty(container, "displayName", this.localizationManager),
+            description: getLocalizedProperty(container, "description", this.localizationManager),
             containerItems: [],
             uid: containerUid
         }
@@ -152,7 +152,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
             const containerIemName = containerItem.displayNameKey ? containerItem.displayNameKey : containerItem.displayName;
             const containerItemUid: string = containerUid + containerIemName;
             const formattingContainerItem: visuals.FormattingContainerItem = {
-                displayName: getLocalizaedProperty(containerItem, "displayName", this.localizationManager),
+                displayName: getLocalizedProperty(containerItem, "displayName", this.localizationManager),
                 slices: [],
                 groups: [],
                 uid: containerItemUid   
@@ -165,14 +165,14 @@ export class FormattingSettingsService implements IFormattingSettingsService {
             if(containerItem.groups) {
                 containerItem.groups.forEach((group: formattingSettings.Group) => {
                     const groupSlices: visuals.FormattingGroup = {
-                        displayName: getLocalizaedProperty(group, "displayName", this.localizationManager),
-                        description: getLocalizaedProperty(group, "description", this.localizationManager),
+                        displayName: getLocalizedProperty(group, "displayName", this.localizationManager),
+                        description: getLocalizedProperty(group, "description", this.localizationManager),
                         slices: [],
                         uid: group.name + "-container-group",
                         collapsible: group.collapsible,
                         delaySaveSlices: group.delaySaveSlices,
                         disabled: group.disabled,
-                        disabledReason: getLocalizaedProperty(group, "disabledReason", this.localizationManager)
+                        disabledReason: getLocalizedProperty(group, "disabledReason", this.localizationManager)
                     };
                     this.setTopLevelToggleSliceClone(group, groupSlices, objectName);
                     this.buildFormattingSlices({slices: group.slices, objectName, sliceNames, formattingSlices: groupSlices.slices as visuals.FormattingSlice[]});
