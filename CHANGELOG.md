@@ -1,4 +1,10 @@
 
+## 6.2.0
+* All *Slices*, *Groups* and *Cards* now can be `disabled` and provided with `disabledReason` or `disabledReasonKey` for localized version.
+* *Container* card can have `Groups` inside
+* Bug with delaySaveSlices was fixed for *Container*s
+
+
 ## 6.1.0
 * `ItemDropdown` now supports new interface `ILocalizedItemMember` for localization of dropdown items.
 * `ItemDropdown` got new method `setValue(value: powerbi.EnumMemberValue, localizationManager?: powerbi.extensibility.ILocalizationManager)` to set value by unique enum member value.
