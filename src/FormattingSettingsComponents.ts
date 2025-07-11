@@ -287,7 +287,7 @@ export class ItemDropdown extends SimpleSlice<powerbi.IEnumMember | ILocalizedIt
 }
 
 export class AutoDropdown extends SimpleSlice<powerbi.EnumMemberValue> {
-    mergeValues?: powerbi.IEnumMember[];
+    mergeValues?: powerbi.IEnumMember[] | ILocalizedItemMember[];
     filterValues?: powerbi.EnumMemberValue[];
 
     type?= visuals.FormattingComponent.Dropdown;
@@ -296,12 +296,21 @@ export class AutoDropdown extends SimpleSlice<powerbi.EnumMemberValue> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.AutoDropdown {
+    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.AutoDropdown {
         return {
-            ... super.getFormattingComponent(objectName),
-            mergeValues: this.mergeValues,
+            ... super.getFormattingComponent(objectName, localizationManager),
+            mergeValues: this.getFormattingItems(localizationManager, this.mergeValues),
             filterValues: this.filterValues
         }
+    }
+
+    getFormattingItems?(localizationManager?: powerbi.extensibility.ILocalizationManager, items?: powerbi.IEnumMember[] | ILocalizedItemMember[]): powerbi.IEnumMember[] {
+        return items.map((item) => {
+            return {
+                ...item,
+                displayName: getLocalizedProperty(item, "displayName", localizationManager)
+            }
+        })
     }
 }
 
@@ -363,7 +372,7 @@ export class FieldPicker extends SimpleSlice<data.ISQExpr[]> {
 }
 
 export class ItemFlagsSelection extends SimpleSlice<string> {
-    items: powerbi.IEnumMember[];
+    items: powerbi.IEnumMember[] | ILocalizedItemMember[];
 
     type?= visuals.FormattingComponent.FlagsSelection;
 
@@ -371,11 +380,20 @@ export class ItemFlagsSelection extends SimpleSlice<string> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.ItemFlagsSelection {
+    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.ItemFlagsSelection {
         return {
             ... super.getFormattingComponent(objectName),
-            items: this.items
+            items: this.getFormattingItems(localizationManager, this.items)
         }
+    }
+
+    getFormattingItems?(localizationManager?: powerbi.extensibility.ILocalizationManager, items?: powerbi.IEnumMember[] | ILocalizedItemMember[]): powerbi.IEnumMember[] {
+        return items.map((item) => {
+            return {
+                ...item,
+                displayName: getLocalizedProperty(item, "displayName", localizationManager)
+            }
+        })
     }
 }
 
