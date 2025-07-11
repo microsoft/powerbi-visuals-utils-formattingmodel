@@ -371,7 +371,12 @@ export class FieldPicker extends SimpleSlice<data.ISQExpr[]> {
     }
 }
 
-export class ItemFlagsSelection extends SimpleSlice<string> {
+/**
+ * Allows selecting multiple flags from a predefined list of items with bitwise values.
+ * The selected flags are stored as a single number using bitwise representation,
+ * where each flag corresponds to a specific bit position.
+ */
+export class ItemFlagsSelection extends SimpleSlice<number> {
     items: powerbi.IEnumMember[] | ILocalizedItemMember[];
 
     type?= visuals.FormattingComponent.FlagsSelection;
@@ -397,7 +402,10 @@ export class ItemFlagsSelection extends SimpleSlice<string> {
     }
 }
 
-export class AutoFlagsSelection extends SimpleSlice<powerbi.EnumMemberValue> {
+/**
+ * Multiple flags selection component with enumeration values defined in capabilities.json using bitwise values.
+ */
+export class AutoFlagsSelection extends SimpleSlice<string> {
     type?= visuals.FormattingComponent.FlagsSelection;
 }
 
