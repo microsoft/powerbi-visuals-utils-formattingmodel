@@ -7,11 +7,12 @@ import powerbi from "powerbi-visuals-api";
 
 import { IFormattingSettingsSlice, ILocalizedItemMember } from "./FormattingSettingsInterfaces";
 import * as FormattingSettingsParser from "./utils/FormattingSettingsUtils";
+import { getLocalizedProperty } from "./utils/FormattingSettingsUtils";
 
 import data = powerbi.data;
 import visuals = powerbi.visuals;
 
-class NamedEntity {
+export class NamedEntity {
     displayName?: string;
     displayNameKey?: string;
     description?: string;
@@ -19,7 +20,7 @@ class NamedEntity {
 }
 
 export class CardGroupEntity extends NamedEntity {
-    /** name should be the exact same object name from capabilities objects that this formatting card is representing */
+    /** groups doesn't exist in capabilities, it's a custom object to be used in formatting pane, however it should have a unique name */
     name: string;
 
     slices?: Array<Slice>;
@@ -28,6 +29,7 @@ export class CardGroupEntity extends NamedEntity {
     disabled?: boolean;
     /** group disabled reason */
     disabledReason?: string;
+    disabledReasonKey?: string;
     /**
      * If delaySaveSlices is true, then this group's slices' value changes won't be saved to the visual until a
      * signal action is taken. E.g., for an Analytics Pane forecast, the forecast parameter values shouldn't be
@@ -54,6 +56,10 @@ export abstract class CompositeCard extends NamedEntity {
     abstract groups: Array<Group>;
     /** if true, this card will be populated into the formatting pane */
     visible?: boolean;
+    disabled?: boolean;
+    /** card disabled reason */
+    disabledReason?: string;
+    disabledReasonKey?: string;
     /** if true, this card should be populated into the analytics pane */
     analyticsPane?: boolean;
     /** Slice, usually a ToggleSwitch, to be rendered at the top of the card/group */
@@ -66,9 +72,9 @@ export abstract class CompositeCard extends NamedEntity {
 }
 
 export class Group extends CardGroupEntity {
-    constructor(object: Group) {
+    constructor(object?: Group) {
         super();
-        Object.assign(this, object);
+        Object.assign(this, object ?? new Object({}));
     }
 }
 
@@ -96,6 +102,11 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
     instanceKind?: powerbi.VisualEnumerationInstanceKinds;
     /** if true, this slice will be populated into the formatting pane */
     visible?: boolean;
+    /** if true, this slice will be disabled */
+    disabled?: boolean;
+    /** slice disabled reason */
+    disabledReason?: string;
+    disabledReasonKey?: string;
 
     /** type declared in each slice sub class, No need to declare it in initializing object */
     type?: visuals.FormattingComponent;
@@ -108,8 +119,8 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
     getFormattingSlice?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleVisualFormattingSlice {
         const controlType = this.type;
         const propertyName = this.name;
-        const sliceDisplayName = (localizationManager && this.displayNameKey) ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName;
-        const sliceDescription = (localizationManager && this.descriptionKey) ? localizationManager.getDisplayName(this.descriptionKey) : this.description;
+        const sliceDisplayName = getLocalizedProperty(this, "displayName", localizationManager);
+        const sliceDescription = getLocalizedProperty(this, "description", localizationManager);
         const componentDisplayName = {
             displayName: sliceDisplayName,
             description: sliceDescription,
@@ -122,6 +133,8 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
                 type: controlType,
                 properties: this.getFormattingComponent(objectName, localizationManager)
             },
+            disabled: this.disabled,
+            disabledReason: getLocalizedProperty(this, "disabledReason", localizationManager),
         };
     }
     // eslint-disable-next-line
@@ -236,7 +249,7 @@ export class DatePicker extends SimpleSlice<Date> {
     getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.DatePicker {
         return {
             ... super.getFormattingComponent(objectName),
-            placeholder: (localizationManager && this.placeholderKey) ? localizationManager.getDisplayName(this.placeholderKey) : this.placeholder,
+            placeholder: getLocalizedProperty(this, "placeholder", localizationManager),
             validators: this.validators
         }
     }
@@ -262,7 +275,7 @@ export class ItemDropdown extends SimpleSlice<powerbi.IEnumMember | ILocalizedIt
         return items.map((item) => {
             return {
                 ...item,
-                displayName: (localizationManager && item.displayNameKey) ? localizationManager.getDisplayName(item.displayNameKey) : item.displayName
+                displayName: getLocalizedProperty(item, "displayName", localizationManager)
             }
         })
     }
@@ -433,6 +446,9 @@ export abstract class CompositeSlice extends NamedEntity implements IFormattingS
      * it will only be used for building formatting slice uid*/
     name: string;
     type?: visuals.FormattingComponent;
+    /** slice disabled reason */
+    disabledReason?: string;
+    disabledReasonKey?: string;
 
     visible?: boolean;
 
@@ -445,8 +461,8 @@ export abstract class CompositeSlice extends NamedEntity implements IFormattingS
         const controlType = this.type;
         const propertyName = this.name;
         const componentDisplayName = {
-            displayName: (localizationManager && this.displayNameKey) ? localizationManager.getDisplayName(this.displayNameKey) : this.displayName,
-            description: (localizationManager && this.descriptionKey) ? localizationManager.getDisplayName(this.descriptionKey) : this.description,
+            displayName: getLocalizedProperty(this, "displayName", localizationManager),
+            description: getLocalizedProperty(this, "description", localizationManager),
             uid: objectName + '-' + propertyName,
         };
 
@@ -559,4 +575,6 @@ export class Container extends NamedEntity {
 
 export class ContainerItem extends NamedEntity {
     slices?: Slice[];
+    groups?: Group[];
+    visible?: boolean;
 }

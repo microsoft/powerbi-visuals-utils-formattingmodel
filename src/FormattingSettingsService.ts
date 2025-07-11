@@ -5,6 +5,7 @@ import { IBuildFormattingSlicesParams, IFormattingSettingsService } from "./Form
 
 import visuals = powerbi.visuals;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
+import { getLocalizedProperty } from "./utils/FormattingSettingsUtils";
 
 export class FormattingSettingsService implements IFormattingSettingsService {
     private localizationManager: ILocalizationManager;
@@ -40,6 +41,12 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                         containerItem?.slices?.forEach((slice: Slice) => {
                             slice?.setPropertiesValues(dataViewObjects, card.name);
                         });
+                        containerItem?.groups?.forEach((group: formattingSettings.Group) => {
+                            group?.topLevelSlice?.setPropertiesValues(dataViewObjects, card.name);
+                            group?.slices?.forEach((slice: Slice) => {
+                                slice?.setPropertiesValues(dataViewObjects, card.name);
+                            });
+                        });
                     });
                 });
             });
@@ -62,103 +69,120 @@ export class FormattingSettingsService implements IFormattingSettingsService {
             .filter(({visible = true}) => visible)
             .forEach((card: Cards) => {
                 const formattingCard: visuals.FormattingCard = {
-                    displayName: (this.localizationManager && card.displayNameKey) ? this.localizationManager.getDisplayName(card.displayNameKey) : card.displayName,
-                    description: (this.localizationManager && card.descriptionKey) ? this.localizationManager.getDisplayName(card.descriptionKey) : card.description,
+                    displayName: getLocalizedProperty(card, "displayName", this.localizationManager),
+                    description: getLocalizedProperty(card, "description", this.localizationManager),
+                    disabled: card.disabled,
+                    disabledReason: getLocalizedProperty(card, "disabledReason", this.localizationManager),
                     groups: [],
                     uid: card.name + "-card",
                     analyticsPane: card.analyticsPane,
                 };
 
                 const objectName = card.name;
-
-                if (card.topLevelSlice) {
-                    const topLevelToggleSlice: visuals.FormattingSlice = card.topLevelSlice.getFormattingSlice(objectName, this.localizationManager);
-                    topLevelToggleSlice.suppressDisplayName = true;
-                    formattingCard.topLevelToggle = (<visuals.EnabledSlice>topLevelToggleSlice);
-                }
-
+                
+                this.setTopLevelToggleSliceClone(card, formattingCard, objectName);
                 card.onPreProcess?.();
 
                 const isSimpleCard = card instanceof SimpleCard;
                 const cardGroupInstances = <CardGroupEntity[]>(isSimpleCard ? 
                     [ card ].filter(({visible = true}) => visible) : 
                     card.groups.filter(({visible = true}) => visible));
+
                 cardGroupInstances?.forEach((cardGroupInstance: CardGroupEntity) => {
-                        const groupUid = cardGroupInstance.name + "-group";
-
-                        // Build formatting group for each group
-                        const formattingGroup: visuals.FormattingGroup = {
-                                displayName: isSimpleCard ? undefined : (this.localizationManager && cardGroupInstance.displayNameKey)
-                                    ? this.localizationManager.getDisplayName(cardGroupInstance.displayNameKey) : cardGroupInstance.displayName,
-                                description: isSimpleCard ? undefined : (this.localizationManager && cardGroupInstance.descriptionKey)
-                                    ? this.localizationManager.getDisplayName(cardGroupInstance.descriptionKey) : cardGroupInstance.description,
-                                slices: [],
-                                uid: groupUid,
-                                collapsible: cardGroupInstance.collapsible,
-                                delaySaveSlices: cardGroupInstance.delaySaveSlices,
-                                disabled: cardGroupInstance.disabled,
-                                disabledReason: cardGroupInstance.disabledReason,
-                            }
-                        formattingCard.groups.push(formattingGroup);
-
-                        // In case formatting model adds data points or top categories (Like when you modify specific visual category color).
-                        // these categories use same object name and property name from capabilities and the generated uid will be the same for these formatting categories properties
-                        // Solution => Save slice names to modify each slice uid to be unique by adding counter value to the new slice uid
-                        const sliceNames: { [name: string]: number } = {};
-
-                        // Build formatting container slice for each property
-                        if (cardGroupInstance.container) {
-                            const container = cardGroupInstance.container;
-                            const containerUid = groupUid + "-container";
-                            const formattingContainer: visuals.FormattingContainer = {
-                                displayName: (this.localizationManager && container.displayNameKey)
-                                    ? this.localizationManager.getDisplayName(container.displayNameKey) : container.displayName,
-                                description: (this.localizationManager && container.descriptionKey)
-                                    ? this.localizationManager.getDisplayName(container.descriptionKey) : container.description,
-                                containerItems: [],
-                                uid: containerUid
-                            }
-
-                            container.containerItems.forEach((containerItem: formattingSettings.ContainerItem) => {
-                                if(!containerItem) { // This is to prevent error when container item is null or undefined
-                                    return;
-                                }
-                                // Build formatting container item object
-                                const containerIemName = containerItem.displayNameKey ? containerItem.displayNameKey : containerItem.displayName;
-                                const containerItemUid: string = containerUid + containerIemName;
-                                const formattingContainerItem: visuals.FormattingContainerItem = {
-                                    displayName: (this.localizationManager && containerItem.displayNameKey)
-                                        ? this.localizationManager.getDisplayName(containerItem.displayNameKey) : containerItem.displayName,
-                                    slices: [],
-                                    uid: containerItemUid
-                                }
-
-                                // Build formatting slices and add them to current formatting container item
-                                this.buildFormattingSlices({slices: containerItem.slices, objectName, sliceNames, formattingSlices: formattingContainerItem.slices});
-                                formattingContainer.containerItems.push(formattingContainerItem);
-                            });
-
-                            formattingGroup.container = formattingContainer;
-                        }
-
-                        if (cardGroupInstance.slices) {
-                            if (cardGroupInstance.topLevelSlice) {
-                                const topLevelToggleSlice: visuals.FormattingSlice = cardGroupInstance.topLevelSlice.getFormattingSlice(objectName, this.localizationManager);
-                                topLevelToggleSlice.suppressDisplayName = true;
-                                (formattingGroup.displayName==undefined ? formattingCard : formattingGroup).topLevelToggle = (<visuals.EnabledSlice>topLevelToggleSlice);
-                            }
-                            // Build formatting slice for each property
-                            this.buildFormattingSlices({slices: cardGroupInstance.slices, objectName, sliceNames, formattingSlices: formattingGroup.slices as visuals.FormattingSlice[]});
-                        }
-
-                    });
+                    const formattingGroup = this.buildCardGroupInstances(cardGroupInstance, formattingCard, isSimpleCard, objectName);
+                    formattingCard.groups.push(formattingGroup);
+                });
 
                 formattingCard.revertToDefaultDescriptors = this.getRevertToDefaultDescriptor(card);
-
                 formattingModel.cards.push(formattingCard);
             });
-
         return formattingModel;
+    }
+
+    private buildCardGroupInstances(cardGroupInstance: CardGroupEntity, formattingCard: visuals.FormattingCard, isSimpleCard: boolean, objectName: string): visuals.FormattingGroup {
+        const groupUid = cardGroupInstance.name + "-group";
+
+        // Build formatting group for each group
+        const formattingGroup: visuals.FormattingGroup = {
+            displayName: isSimpleCard ? undefined : getLocalizedProperty(cardGroupInstance, "displayName", this.localizationManager),
+            description: isSimpleCard ? undefined : getLocalizedProperty(cardGroupInstance, "description", this.localizationManager),
+            slices: [],
+            uid: groupUid,
+            collapsible: cardGroupInstance.collapsible,
+            delaySaveSlices: cardGroupInstance.delaySaveSlices,
+            disabled: cardGroupInstance.disabled,
+            disabledReason: getLocalizedProperty(cardGroupInstance, "disabledReason", this.localizationManager),
+        }
+        // In case formatting model adds data points or top categories (Like when you modify specific visual category color).
+        // these categories use same object name and property name from capabilities and the generated uid will be the same for these formatting categories properties
+        // Solution => Save slice names to modify each slice uid to be unique by adding counter value to the new slice uid
+        const sliceNames: { [name: string]: number } = {};
+
+        // Build formatting container slice for each property
+        if (cardGroupInstance.container) {
+            const containerUid = formattingGroup.uid + "-container";
+            const formattingContainer = this.buildContainerGroupInstance(cardGroupInstance.container, containerUid, objectName, sliceNames);
+            formattingGroup.displayName = "Apply settings to";
+            formattingGroup.sliceWithContainer = false;
+            formattingGroup.collapsible = false;
+            formattingGroup.container = formattingContainer;
+        }
+
+        if (cardGroupInstance.slices) {
+            this.setTopLevelToggleSliceClone(cardGroupInstance, (formattingGroup.displayName==undefined ? formattingCard : formattingGroup), objectName);
+            // Build formatting slice for each property
+            this.buildFormattingSlices({slices: cardGroupInstance.slices, objectName, sliceNames, formattingSlices: formattingGroup.slices as visuals.FormattingSlice[]});
+        }
+        return formattingGroup;
+    }
+
+    private buildContainerGroupInstance(container: formattingSettings.Container, containerUid: string, objectName: string, sliceNames: { [name: string]: number }): visuals.FormattingContainer {
+        const formattingContainer: visuals.FormattingContainer = {
+            displayName: getLocalizedProperty(container, "displayName", this.localizationManager),
+            description: getLocalizedProperty(container, "description", this.localizationManager),
+            containerItems: [],
+            uid: containerUid
+        }
+
+        container.containerItems.filter(({visible = true}) => visible).forEach((containerItem: formattingSettings.ContainerItem) => {
+            if(!containerItem) { // This is to prevent error when container item is null or undefined
+                return;
+            }
+            // Build formatting container item object
+            const containerIemName = containerItem.displayNameKey ? containerItem.displayNameKey : containerItem.displayName;
+            const containerItemUid: string = containerUid + containerIemName;
+            const formattingContainerItem: visuals.FormattingContainerItem = {
+                displayName: getLocalizedProperty(containerItem, "displayName", this.localizationManager),
+                slices: [],
+                groups: [],
+                uid: containerItemUid   
+            }
+            // Build formatting slices and add them to current formatting container item
+            if(containerItem.slices) {
+                this.buildFormattingSlices({slices: containerItem.slices, objectName, sliceNames, formattingSlices: formattingContainerItem.slices});
+            }
+            // Build formatting groups and add them to current formatting container item
+            if(containerItem.groups) {
+                containerItem.groups.forEach((group: formattingSettings.Group) => {
+                    const groupSlices: visuals.FormattingGroup = {
+                        displayName: getLocalizedProperty(group, "displayName", this.localizationManager),
+                        description: getLocalizedProperty(group, "description", this.localizationManager),
+                        slices: [],
+                        uid: group.name + "-container-group",
+                        collapsible: group.collapsible,
+                        delaySaveSlices: group.delaySaveSlices,
+                        disabled: group.disabled,
+                        disabledReason: getLocalizedProperty(group, "disabledReason", this.localizationManager)
+                    };
+                    this.setTopLevelToggleSliceClone(group, groupSlices, objectName);
+                    this.buildFormattingSlices({slices: group.slices, objectName, sliceNames, formattingSlices: groupSlices.slices as visuals.FormattingSlice[]});
+                    formattingContainerItem.groups.push(groupSlices);
+                });
+            }
+            formattingContainer.containerItems.push(formattingContainerItem); // pushes specific container item (All, name1, name2) with slices
+        });
+
+        return formattingContainer;
     }
 
     private buildFormattingSlices({slices, objectName, sliceNames, formattingSlices }: IBuildFormattingSlicesParams) {
@@ -166,7 +190,6 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         slices?.filter(({visible = true}) => visible)
             .forEach((slice: Slice) => {
             const formattingSlice: visuals.FormattingSlice = slice?.getFormattingSlice(objectName, this.localizationManager);
-
             if (formattingSlice) {
                 // Modify formatting slice uid if needed
                 if (sliceNames[slice.name] === undefined) {
@@ -200,7 +223,13 @@ export class FormattingSettingsService implements IFormattingSettingsService {
 
             cardGroupInstance.container?.containerItems?.forEach((containerItem: formattingSettings.ContainerItem) => {
                 cardContainerSlicesDefaultDescriptors = cardContainerSlicesDefaultDescriptors.concat(
-                    this.getSlicesRevertToDefaultDescriptor(card.name, containerItem.slices, sliceNames))
+                    this.getSlicesRevertToDefaultDescriptor(card.name, containerItem.slices, sliceNames)
+                )
+                containerItem.groups?.forEach((group: formattingSettings.Group) => {
+                    cardContainerSlicesDefaultDescriptors = cardContainerSlicesDefaultDescriptors.concat(
+                        this.getSlicesRevertToDefaultDescriptor(card.name, group.slices, sliceNames)
+                    )
+                });
             });
 
             revertToDefaultDescriptors.push(...cardSlicesDefaultDescriptors.concat(cardContainerSlicesDefaultDescriptors));
@@ -223,6 +252,14 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         });
 
         return revertToDefaultDescriptors;
+    }
+
+    private setTopLevelToggleSliceClone(objectToClone: Cards | CardGroupEntity, newParent: visuals.FormattingGroup | visuals.FormattingCard, objectName: string) {
+        if (objectToClone.topLevelSlice) {
+            const topLevelToggleSlice: visuals.FormattingSlice = objectToClone.topLevelSlice.getFormattingSlice(objectName, this.localizationManager);
+            topLevelToggleSlice.suppressDisplayName = true;
+            newParent.topLevelToggle = (<visuals.EnabledSlice>topLevelToggleSlice);
+        }
     }
 }
 
