@@ -376,7 +376,7 @@ export class FieldPicker extends SimpleSlice<data.ISQExpr[]> {
  * The selected flags are stored as a single number using bitwise representation,
  * where each flag corresponds to a specific bit position.
  */
-export class ItemFlagsSelection extends SimpleSlice<number> {
+export class ItemFlagsSelection extends SimpleSlice<powerbi.EnumMemberValue> {
     items: powerbi.IEnumMember[] | ILocalizedItemMember[];
 
     type?= visuals.FormattingComponent.FlagsSelection;
