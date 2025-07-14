@@ -1,4 +1,8 @@
 
+## 6.2.1
+* Improved type definitions and JSDoc documentation for `ItemFlagsSelection` and `AutoFlagsSelection` components
+* Added clarification that both flag selection components require bitwise values (powers of 2) for proper flag functionality
+
 ## 6.2.0
 * All *Slices*, *Groups* and *Cards* now can be `disabled` and provided with `disabledReason` or `disabledReasonKey` for localized version.
 * *Container* card can have `Groups` inside
