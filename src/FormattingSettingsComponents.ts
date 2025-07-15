@@ -403,7 +403,8 @@ export class ItemFlagsSelection extends SimpleSlice<powerbi.EnumMemberValue> {
 }
 
 /**
- * Multiple flags selection component with enumeration values defined in capabilities.json using bitwise values.
+ * Multiple flags selection component with enumeration values defined in capabilities.json,
+ * using bitwise number values in a string representation.
  */
 export class AutoFlagsSelection extends SimpleSlice<string> {
     type?= visuals.FormattingComponent.FlagsSelection;
