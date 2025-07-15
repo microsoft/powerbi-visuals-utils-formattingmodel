@@ -305,7 +305,7 @@ export class AutoDropdown extends SimpleSlice<powerbi.EnumMemberValue> {
     }
 
     getFormattingItems?(localizationManager?: powerbi.extensibility.ILocalizationManager, items?: powerbi.IEnumMember[] | ILocalizedItemMember[]): powerbi.IEnumMember[] {
-        return items.map((item) => {
+        return items?.map((item) => {
             return {
                 ...item,
                 displayName: getLocalizedProperty(item, "displayName", localizationManager)
@@ -375,8 +375,13 @@ export class FieldPicker extends SimpleSlice<data.ISQExpr[]> {
  * Allows selecting multiple flags from a predefined list of items with bitwise values.
  * The selected flags are stored as a single number using bitwise representation,
  * where each flag corresponds to a specific bit position.
+ * @example
+ * 0 = no flags
+ * 1 = show category
+ * 2 = show value  
+ * 4 = show percent
  */
-export class ItemFlagsSelection extends SimpleSlice<powerbi.EnumMemberValue> {
+export class ItemFlagsSelection extends SimpleSlice<number> {
     items: powerbi.IEnumMember[] | ILocalizedItemMember[];
 
     type?= visuals.FormattingComponent.FlagsSelection;
@@ -407,8 +412,13 @@ export class ItemFlagsSelection extends SimpleSlice<powerbi.EnumMemberValue> {
  * using bitwise number values in a string representation.
  * The selected flags are stored as a single number using bitwise representation,
  * where each flag corresponds to a specific bit position.
+ * @example
+ * 0 = no flags
+ * 1 = show category
+ * 2 = show value  
+ * 4 = show percent
  */
-export class AutoFlagsSelection extends SimpleSlice<string> {
+export class AutoFlagsSelection extends SimpleSlice<number> {
     type?= visuals.FormattingComponent.FlagsSelection;
 }
 
