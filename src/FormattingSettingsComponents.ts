@@ -488,6 +488,7 @@ export abstract class CompositeSlice extends NamedEntity implements IFormattingS
     /** slice disabled reason */
     disabledReason?: string;
     disabledReasonKey?: string;
+    disabled?: boolean;
 
     visible?: boolean;
 
@@ -507,6 +508,7 @@ export abstract class CompositeSlice extends NamedEntity implements IFormattingS
 
         return <visuals.CompositeVisualFormattingSlice>{
             ...componentDisplayName,
+            disabled: this.disabled,
             control: {
                 type: controlType,
                 properties: this.getFormattingComponent(objectName)
