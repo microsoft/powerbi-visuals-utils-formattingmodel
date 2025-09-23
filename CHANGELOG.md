@@ -1,4 +1,7 @@
 
+## 6.2.2
+* Added missing `disabled` property to `FontPicker`
+
 ## 6.2.1
 * Improved type definitions and JSDoc documentation for `ItemFlagsSelection` and `AutoFlagsSelection` components
 * Added clarification that both flag selection components require bitwise values (powers of 2) for proper flag functionality
