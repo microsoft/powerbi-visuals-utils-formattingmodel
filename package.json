@@ -1,6 +1,6 @@
 {
   "name": "powerbi-visuals-utils-formattingmodel",
-  "version": "6.2.2",
+  "version": "7.0.0",
   "description": "",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -17,9 +17,9 @@
     "powerbi-visuals-api": "^5.11.0"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^7.18.0",
-    "@typescript-eslint/parser": "^7.18.0",
-    "eslint": "^8.57.1",
-    "eslint-plugin-powerbi-visuals": "^0.8.1"
+    "@typescript-eslint/eslint-plugin": "^8.59.4",
+    "@typescript-eslint/parser": "^8.59.4",
+    "eslint": "^10.4.0",
+    "eslint-plugin-powerbi-visuals": "^1.1.1"
   }
 }

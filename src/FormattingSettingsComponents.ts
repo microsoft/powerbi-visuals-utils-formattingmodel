@@ -137,7 +137,6 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
             disabledReason: getLocalizedProperty(this, "disabledReason", localizationManager),
         };
     }
-    // eslint-disable-next-line
     getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleComponentBase<any> {
         let value: T | ILocalizedItemMember = this.value as ILocalizedItemMember;
         if (value?.displayNameKey) {

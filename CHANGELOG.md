@@ -1,4 +1,15 @@
 
+## 7.0.0
+
+### Changed
+* Migrated ESLint config to flat-config ESM `eslint.config.mjs`.
+* Removed legacy `.eslintrc.js` and `.eslintignore` in favor of flat-config equivalents.
+* Updated TypeScript config for TS6 compatibility, including `ignoreDeprecations`, explicit `rootDir`, `strict: true`, and a modern `lib` target.
+* Documented why `skipLibCheck` is required for Power BI API declaration compatibility.
+
+### Infrastructure
+* Lint config now uses ESLint 10 flat config with TypeScript ESLint 8.
+
 ## 6.2.2
 * Added missing `disabled` property to `FontPicker`
 

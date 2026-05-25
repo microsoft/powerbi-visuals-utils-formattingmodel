@@ -212,7 +212,6 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         let cardSlicesDefaultDescriptors: visuals.FormattingDescriptor[]
         let cardContainerSlicesDefaultDescriptors: visuals.FormattingDescriptor[] = [];
 
-        // eslint-disable-next-line
         if (card instanceof CompositeCard && card.topLevelSlice) revertToDefaultDescriptors.push(...card.topLevelSlice?.getRevertToDefaultDescriptor(card.name));
 
         const cardGroupInstances = <CardGroupEntity[]>(card instanceof SimpleCard ? 
