@@ -4,13 +4,7 @@ export default [
     {
         ignores: [
             "node_modules/**",
-            "dist/**",
-            "coverage/**",
-            "test/**",
-            "karma.conf.ts",
-            "webpack.config.js",
             "lib/**",
-            ".tmp/**",
         ],
     },
     {

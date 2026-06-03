@@ -35,7 +35,7 @@ export function getPropertyValue(slice: SimpleSlice, value: any, defaultValue: a
     }
 
     if ((value as Fill).solid) {
-        return { value: (value as Fill)?.solid.color };
+        return { value: (value as Fill)?.solid?.color };
     }
 
     if (slice?.type === visuals.FormattingComponent.Dropdown && (slice as ItemDropdown).items) {
@@ -47,5 +47,5 @@ export function getPropertyValue(slice: SimpleSlice, value: any, defaultValue: a
 }
     
 export function getLocalizedProperty<T extends NamedEntity>(item: T, property: keyof T, localizationManager?: powerbi.extensibility.ILocalizationManager): string | undefined {
-    return (localizationManager && item[property.toString() + "Key"]) ? localizationManager.getDisplayName(item[property.toString() + "Key"]) : item[property]?.toString();
+    return (localizationManager && item[property.toString() + "Key"]) ? localizationManager.getDisplayName(item[property.toString() + "Key"] as string) : item[property]?.toString();
 }

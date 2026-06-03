@@ -5,25 +5,26 @@
       "experimentalDecorators": true,
       "declaration": true,
       "sourceMap": true,
-      "module": "ES2020",
+      "module": "preserve",
       "moduleResolution": "bundler",
-      "target": "ES2020",
+      "ignoreDeprecations": "6.0",
+      "target": "ES2022",
       "strict": true,
-      "strictNullChecks": false,
-      "strictPropertyInitialization": false,
-      "noImplicitAny": false,
+      "strictNullChecks": true,
+      "strictPropertyInitialization": true,
+      "noImplicitAny": true,
       "forceConsistentCasingInFileNames": true,
       "noEmitOnError": true,
       // Required due to type errors in powerbi-visuals-api declarations. Can be removed once they are fixed upstream.
       "skipLibCheck": true,
       "lib": [
-          "es2020",
+          "es2022",
           "dom"
       ],
       "rootDir": "./src",
       "outDir": "./lib"
   },
-   "include": [
+  "include": [
       "src/**/*.ts"
-    ]
+  ]
 }

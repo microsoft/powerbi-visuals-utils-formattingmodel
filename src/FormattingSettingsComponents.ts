@@ -13,6 +13,8 @@ import data = powerbi.data;
 import visuals = powerbi.visuals;
 
 export class NamedEntity {
+    [property: string]: unknown;
+
     displayName?: string;
     displayNameKey?: string;
     description?: string;
@@ -21,7 +23,7 @@ export class NamedEntity {
 
 export class CardGroupEntity extends NamedEntity {
     /** groups doesn't exist in capabilities, it's a custom object to be used in formatting pane, however it should have a unique name */
-    name: string;
+    name!: string;
 
     slices?: Array<Slice>;
     container?: Container;
@@ -45,13 +47,13 @@ export class CardGroupEntity extends NamedEntity {
 }
 
 export class Model {
-    cards: Array<Cards>;
+    cards!: Array<Cards>;
 }
 
 /** CompositeCard is use to populate a card into the formatting pane with multiple groups */
 export abstract class CompositeCard extends NamedEntity {
     /** name should be the exact same object name from capabilities objects that this formatting card is representing */
-    name: string;
+    name!: string;
 
     abstract groups: Array<Group>;
     /** if true, this card will be populated into the formatting pane */
@@ -95,8 +97,8 @@ export type Slice = SimpleSlice | CompositeSlice;
 
 export abstract class SimpleSlice<T = any> extends NamedEntity implements IFormattingSettingsSlice {
     /** name should be the exact same property name from capabilities object properties list that this formatting slice is representing */
-    name: string;
-    value: T;
+    name!: string;
+    value!: T;
     selector?: data.Selector;
     altConstantSelector?: data.Selector;
     instanceKind?: powerbi.VisualEnumerationInstanceKinds;
@@ -116,7 +118,7 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
         Object.assign(this, object);
     }
 
-    getFormattingSlice?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleVisualFormattingSlice {
+    getFormattingSlice(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleVisualFormattingSlice {
         const controlType = this.type;
         const propertyName = this.name;
         const sliceDisplayName = getLocalizedProperty(this, "displayName", localizationManager);
@@ -137,7 +139,7 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
             disabledReason: getLocalizedProperty(this, "disabledReason", localizationManager),
         };
     }
-    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleComponentBase<any> {
+    getFormattingComponent(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleComponentBase<any> {
         let value: T | ILocalizedItemMember = this.value as ILocalizedItemMember;
         if (value?.displayNameKey) {
             value = {
@@ -151,21 +153,21 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
         }
     }
 
-    getRevertToDefaultDescriptor?(objectName: string): visuals.FormattingDescriptor[] {
+    getRevertToDefaultDescriptor(objectName: string): visuals.FormattingDescriptor[] {
         return [{
             objectName: objectName,
             propertyName: this.name
         }]
     }
 
-    setPropertiesValues?(dataViewObjects: powerbi.DataViewObjects, objectName: string): void {
+    setPropertiesValues(dataViewObjects: powerbi.DataViewObjects, objectName: string): void {
         const newValue = <T>dataViewObjects?.[objectName]?.[this.name]
         this.value = FormattingSettingsParser.getPropertyValue(this, newValue, this.value);
     }
 }
 
 export class AlignmentGroup extends SimpleSlice<string> {
-    mode: visuals.AlignmentGroupMode;
+    mode!: visuals.AlignmentGroupMode;
     supportsNoSelection?: boolean;
 
     type?= visuals.FormattingComponent.AlignmentGroup;
@@ -174,7 +176,7 @@ export class AlignmentGroup extends SimpleSlice<string> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.AlignmentGroup {
+    getFormattingComponent(objectName: string): visuals.AlignmentGroup {
         return {
             ... super.getFormattingComponent(objectName),
             mode: this.mode,
@@ -201,7 +203,7 @@ export class ColorPicker extends SimpleSlice<powerbi.ThemeColorData> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.ColorPicker {
+    getFormattingComponent(objectName: string): visuals.ColorPicker {
         return {
             ... super.getFormattingComponent(objectName),
             defaultColor: this.defaultColor,
@@ -219,7 +221,7 @@ export class NumUpDown extends SimpleSlice<number> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.NumUpDown {
+    getFormattingComponent(objectName: string): visuals.NumUpDown {
         return {
             ... super.getFormattingComponent(objectName),
             options: this.options
@@ -232,7 +234,7 @@ export class Slider extends NumUpDown {
 }
 
 export class DatePicker extends SimpleSlice<Date> {
-    placeholder: string;
+    placeholder!: string;
     placeholderKey?: string;
     validators?: {
         max?: visuals.MaxValidator<Date>;
@@ -245,17 +247,17 @@ export class DatePicker extends SimpleSlice<Date> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.DatePicker {
+    getFormattingComponent(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.DatePicker {
         return {
             ... super.getFormattingComponent(objectName),
-            placeholder: getLocalizedProperty(this, "placeholder", localizationManager),
+            placeholder: getLocalizedProperty(this, "placeholder", localizationManager) ?? this.placeholder ?? "",
             validators: this.validators
         }
     }
 }
 
 export class ItemDropdown extends SimpleSlice<powerbi.IEnumMember | ILocalizedItemMember> {
-    items: powerbi.IEnumMember[] | ILocalizedItemMember[];
+    items!: powerbi.IEnumMember[] | ILocalizedItemMember[];
 
     type?= visuals.FormattingComponent.Dropdown;
 
@@ -263,25 +265,25 @@ export class ItemDropdown extends SimpleSlice<powerbi.IEnumMember | ILocalizedIt
         super(object);
     }
 
-    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.ItemDropdown {
+    getFormattingComponent(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.ItemDropdown {
         return {
             ... super.getFormattingComponent(objectName, localizationManager),
             items: this.getFormattingItems(localizationManager, this.items)
         }
     }
 
-    getFormattingItems?(localizationManager?: powerbi.extensibility.ILocalizationManager, items?: powerbi.IEnumMember[] | ILocalizedItemMember[]): powerbi.IEnumMember[] {
-        return items.map((item) => {
+    getFormattingItems(localizationManager: powerbi.extensibility.ILocalizationManager | undefined, items: powerbi.IEnumMember[] | ILocalizedItemMember[]): powerbi.IEnumMember[] {
+        return (items ?? []).map((item) => {
             return {
                 ...item,
-                displayName: getLocalizedProperty(item, "displayName", localizationManager)
-            }
+                displayName: getLocalizedProperty(item as any, "displayName", localizationManager)
+            } as powerbi.IEnumMember;
         })
     }
 
-    setValue?(value: powerbi.EnumMemberValue, localizationManager?: powerbi.extensibility.ILocalizationManager) {
+    setValue(value: powerbi.EnumMemberValue, localizationManager?: powerbi.extensibility.ILocalizationManager) {
         const newValue = this.getFormattingItems(localizationManager, this.items).find((item) => item.value === value);
-        this.value = newValue ? newValue : this.items[0];
+        this.value = (newValue ?? this.items[0]) as powerbi.IEnumMember | ILocalizedItemMember;
     }
 }
 
@@ -295,7 +297,7 @@ export class AutoDropdown extends SimpleSlice<powerbi.EnumMemberValue> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.AutoDropdown {
+    getFormattingComponent(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.AutoDropdown {
         return {
             ... super.getFormattingComponent(objectName, localizationManager),
             mergeValues: this.getFormattingItems(localizationManager, this.mergeValues),
@@ -303,12 +305,12 @@ export class AutoDropdown extends SimpleSlice<powerbi.EnumMemberValue> {
         }
     }
 
-    getFormattingItems?(localizationManager?: powerbi.extensibility.ILocalizationManager, items?: powerbi.IEnumMember[] | ILocalizedItemMember[]): powerbi.IEnumMember[] {
-        return items?.map((item) => {
+    getFormattingItems(localizationManager: powerbi.extensibility.ILocalizationManager | undefined, items: powerbi.IEnumMember[] | ILocalizedItemMember[] | undefined): powerbi.IEnumMember[] {
+        return (items ?? []).map((item) => {
             return {
                 ...item,
-                displayName: getLocalizedProperty(item, "displayName", localizationManager)
-            }
+                displayName: getLocalizedProperty(item as any, "displayName", localizationManager)
+            } as powerbi.IEnumMember;
         })
     }
 }
@@ -326,7 +328,7 @@ export class DurationPicker extends SimpleSlice<string> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.DurationPicker {
+    getFormattingComponent(objectName: string): visuals.DurationPicker {
         return {
             ... super.getFormattingComponent(objectName),
             validators: this.validators
@@ -335,7 +337,7 @@ export class DurationPicker extends SimpleSlice<string> {
 }
 
 export class ErrorRangeControl extends SimpleSlice<undefined> {
-    validators: powerbi.explore.directives.ValidationInfo;
+    validators!: powerbi.explore.directives.ValidationInfo;
 
     type?= visuals.FormattingComponent.ErrorRangeControl;
 
@@ -343,7 +345,7 @@ export class ErrorRangeControl extends SimpleSlice<undefined> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.ErrorRangeControl {
+    getFormattingComponent(objectName: string): visuals.ErrorRangeControl {
         return {
             ... super.getFormattingComponent(objectName),
             validators: this.validators
@@ -352,7 +354,7 @@ export class ErrorRangeControl extends SimpleSlice<undefined> {
 }
 
 export class FieldPicker extends SimpleSlice<data.ISQExpr[]> {
-    validators: powerbi.explore.directives.ValidationInfo;
+    validators!: powerbi.explore.directives.ValidationInfo;
     allowMultipleValues?: boolean;
 
     type?= visuals.FormattingComponent.FieldPicker;
@@ -361,7 +363,7 @@ export class FieldPicker extends SimpleSlice<data.ISQExpr[]> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.FieldPicker {
+    getFormattingComponent(objectName: string): visuals.FieldPicker {
         return {
             ... super.getFormattingComponent(objectName),
             validators: this.validators,
@@ -381,7 +383,7 @@ export class FieldPicker extends SimpleSlice<data.ISQExpr[]> {
  * 4 = show percent
  */
 export class ItemFlagsSelection extends SimpleSlice<number> {
-    items: powerbi.IEnumMember[] | ILocalizedItemMember[];
+    items!: powerbi.IEnumMember[] | ILocalizedItemMember[];
 
     type?= visuals.FormattingComponent.FlagsSelection;
 
@@ -389,19 +391,19 @@ export class ItemFlagsSelection extends SimpleSlice<number> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.ItemFlagsSelection {
+    getFormattingComponent(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.ItemFlagsSelection {
         return {
             ... super.getFormattingComponent(objectName),
             items: this.getFormattingItems(localizationManager, this.items)
         }
     }
 
-    getFormattingItems?(localizationManager?: powerbi.extensibility.ILocalizationManager, items?: powerbi.IEnumMember[] | ILocalizedItemMember[]): powerbi.IEnumMember[] {
-        return items.map((item) => {
+    getFormattingItems(localizationManager: powerbi.extensibility.ILocalizationManager | undefined, items: powerbi.IEnumMember[] | ILocalizedItemMember[]): powerbi.IEnumMember[] {
+        return (items ?? []).map((item) => {
             return {
                 ...item,
-                displayName: getLocalizedProperty(item, "displayName", localizationManager)
-            }
+                displayName: getLocalizedProperty(item as any, "displayName", localizationManager)
+            } as powerbi.IEnumMember;
         })
     }
 }
@@ -422,7 +424,7 @@ export class AutoFlagsSelection extends SimpleSlice<number> {
 }
 
 export class TextInput extends SimpleSlice<string> {
-    placeholder: string;
+    placeholder!: string;
 
     type?= visuals.FormattingComponent.TextInput;
 
@@ -430,7 +432,7 @@ export class TextInput extends SimpleSlice<string> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.TextInput {
+    getFormattingComponent(objectName: string): visuals.TextInput {
         return {
             ... super.getFormattingComponent(objectName),
             placeholder: this.placeholder
@@ -471,7 +473,7 @@ export class ShapeMapSelector extends SimpleSlice<powerbi.GeoJson> {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.ShapeMapSelector {
+    getFormattingComponent(objectName: string): visuals.ShapeMapSelector {
         return {
             ... super.getFormattingComponent(objectName),
             isAzMapReferenceSelector: this.isAzMapReferenceSelector
@@ -482,7 +484,7 @@ export class ShapeMapSelector extends SimpleSlice<powerbi.GeoJson> {
 export abstract class CompositeSlice extends NamedEntity implements IFormattingSettingsSlice {
     /** composite slice name isn't required to be from capabilities 
      * it will only be used for building formatting slice uid*/
-    name: string;
+    name!: string;
     type?: visuals.FormattingComponent;
     /** slice disabled reason */
     disabledReason?: string;
@@ -496,7 +498,7 @@ export abstract class CompositeSlice extends NamedEntity implements IFormattingS
         Object.assign(this, object);
     }
 
-    getFormattingSlice?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.CompositeVisualFormattingSlice {
+    getFormattingSlice(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.CompositeVisualFormattingSlice {
         const controlType = this.type;
         const propertyName = this.name;
         const componentDisplayName = {
@@ -515,16 +517,16 @@ export abstract class CompositeSlice extends NamedEntity implements IFormattingS
         }
     }
 
-    getFormattingComponent?(objectName: string): visuals.CompositeComponentPropertyType;
+    abstract getFormattingComponent(objectName: string): visuals.CompositeComponentPropertyType;
 
-    getRevertToDefaultDescriptor?(objectName: string): visuals.FormattingDescriptor[];
+    abstract getRevertToDefaultDescriptor(objectName: string): visuals.FormattingDescriptor[];
 
-    setPropertiesValues?(dataViewObjects: powerbi.DataViewObjects, objectName: string);
+    abstract setPropertiesValues(dataViewObjects: powerbi.DataViewObjects, objectName: string): void;
 }
 
 export class FontControl extends CompositeSlice {
-    fontFamily: FontPicker;
-    fontSize: NumUpDown;
+    fontFamily!: FontPicker;
+    fontSize!: NumUpDown;
     bold?: ToggleSwitch;
     italic?: ToggleSwitch;
     underline?: ToggleSwitch;
@@ -535,7 +537,7 @@ export class FontControl extends CompositeSlice {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.FontControl {
+    getFormattingComponent(objectName: string): visuals.FontControl {
         return {
             fontFamily: this.fontFamily.getFormattingComponent(objectName),
             fontSize: this.fontSize.getFormattingComponent(objectName),
@@ -545,7 +547,7 @@ export class FontControl extends CompositeSlice {
         }
     }
 
-    getRevertToDefaultDescriptor?(objectName: string): visuals.FormattingDescriptor[] {
+    getRevertToDefaultDescriptor(objectName: string): visuals.FormattingDescriptor[] {
         return this.fontFamily.getRevertToDefaultDescriptor(objectName)
             .concat(this.fontSize.getRevertToDefaultDescriptor(objectName))
             .concat(this.bold ? this.bold.getRevertToDefaultDescriptor(objectName) : [])
@@ -553,7 +555,7 @@ export class FontControl extends CompositeSlice {
             .concat(this.underline ? this.underline.getRevertToDefaultDescriptor(objectName) : []);
     }
 
-    setPropertiesValues?(dataViewObjects: powerbi.DataViewObjects, objectName: string) {
+    setPropertiesValues(dataViewObjects: powerbi.DataViewObjects, objectName: string): void {
         this.fontFamily.setPropertiesValues(dataViewObjects, objectName);
         this.fontSize.setPropertiesValues(dataViewObjects, objectName);
         this.bold?.setPropertiesValues(dataViewObjects, objectName);
@@ -563,10 +565,10 @@ export class FontControl extends CompositeSlice {
 }
 
 export class MarginPadding extends CompositeSlice {
-    left: NumUpDown;
-    right: NumUpDown;
-    top: NumUpDown;
-    bottom: NumUpDown;
+    left!: NumUpDown;
+    right!: NumUpDown;
+    top!: NumUpDown;
+    bottom!: NumUpDown;
 
     type?= visuals.FormattingComponent.MarginPadding;
 
@@ -574,7 +576,7 @@ export class MarginPadding extends CompositeSlice {
         super(object);
     }
 
-    getFormattingComponent?(objectName: string): visuals.MarginPadding {
+    getFormattingComponent(objectName: string): visuals.MarginPadding {
         return {
             left: this.left.getFormattingComponent(objectName),
             right: this.right.getFormattingComponent(objectName),
@@ -583,14 +585,14 @@ export class MarginPadding extends CompositeSlice {
         }
     }
 
-    getRevertToDefaultDescriptor?(objectName: string): visuals.FormattingDescriptor[] {
+    getRevertToDefaultDescriptor(objectName: string): visuals.FormattingDescriptor[] {
         return this.left.getRevertToDefaultDescriptor(objectName)
             .concat(this.right.getRevertToDefaultDescriptor(objectName))
             .concat(this.top.getRevertToDefaultDescriptor(objectName))
             .concat(this.bottom.getRevertToDefaultDescriptor(objectName));
     }
 
-    setPropertiesValues?(dataViewObjects: powerbi.DataViewObjects, objectName: string) {
+    setPropertiesValues(dataViewObjects: powerbi.DataViewObjects, objectName: string): void {
         this.left.setPropertiesValues(dataViewObjects, objectName);
         this.right.setPropertiesValues(dataViewObjects, objectName);
         this.top.setPropertiesValues(dataViewObjects, objectName);
@@ -605,7 +607,7 @@ export class Container extends NamedEntity {
         Object.assign(this, object);
     }
 
-    containerItems: ContainerItem[];
+    containerItems!: ContainerItem[];
     /**
      * Whether this container allows editing, including add/remove container items, and
      * edit of individual container item's value itself.

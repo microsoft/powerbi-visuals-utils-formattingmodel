@@ -8,7 +8,7 @@ import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 import { getLocalizedProperty } from "./utils/FormattingSettingsUtils";
 
 export class FormattingSettingsService implements IFormattingSettingsService {
-    private localizationManager: ILocalizationManager;
+    private localizationManager?: ILocalizationManager;
 
     constructor(localizationManager?: ILocalizationManager) {
         this.localizationManager = localizationManager;
@@ -61,19 +61,19 @@ export class FormattingSettingsService implements IFormattingSettingsService {
      * @returns powerbi visual formatting model
      */
     public buildFormattingModel(formattingSettingsModel: Model): visuals.FormattingModel {
-        const formattingModel = {
+        const formattingModel: { cards: visuals.FormattingCard[] } = {
             cards: []
-        }
+        };
         
         formattingSettingsModel.cards
             .filter(({visible = true}) => visible)
             .forEach((card: Cards) => {
                 const formattingCard: visuals.FormattingCard = {
-                    displayName: getLocalizedProperty(card, "displayName", this.localizationManager),
-                    description: getLocalizedProperty(card, "description", this.localizationManager),
+                    displayName: getLocalizedProperty(card, "displayName", this.localizationManager) ?? card.name,
+                    description: getLocalizedProperty(card, "description", this.localizationManager) ?? "",
                     disabled: card.disabled,
                     disabledReason: getLocalizedProperty(card, "disabledReason", this.localizationManager),
-                    groups: [],
+                    groups: [] as visuals.FormattingGroup[],
                     uid: card.name + "-card",
                     analyticsPane: card.analyticsPane,
                 };
@@ -104,9 +104,9 @@ export class FormattingSettingsService implements IFormattingSettingsService {
 
         // Build formatting group for each group
         const formattingGroup: visuals.FormattingGroup = {
-            displayName: isSimpleCard ? undefined : getLocalizedProperty(cardGroupInstance, "displayName", this.localizationManager),
-            description: isSimpleCard ? undefined : getLocalizedProperty(cardGroupInstance, "description", this.localizationManager),
-            slices: [],
+            displayName: isSimpleCard ? formattingCard.displayName : getLocalizedProperty(cardGroupInstance, "displayName", this.localizationManager) ?? cardGroupInstance.name,
+            description: isSimpleCard ? "" : getLocalizedProperty(cardGroupInstance, "description", this.localizationManager) ?? "",
+            slices: [] as visuals.FormattingSlice[],
             uid: groupUid,
             collapsible: cardGroupInstance.collapsible,
             delaySaveSlices: cardGroupInstance.delaySaveSlices,
@@ -129,7 +129,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
         }
 
         if (cardGroupInstance.slices) {
-            this.setTopLevelToggleSliceClone(cardGroupInstance, (formattingGroup.displayName==undefined ? formattingCard : formattingGroup), objectName);
+            this.setTopLevelToggleSliceClone(cardGroupInstance, isSimpleCard ? formattingCard : formattingGroup, objectName);
             // Build formatting slice for each property
             this.buildFormattingSlices({slices: cardGroupInstance.slices, objectName, sliceNames, formattingSlices: formattingGroup.slices as visuals.FormattingSlice[]});
         }
@@ -137,12 +137,12 @@ export class FormattingSettingsService implements IFormattingSettingsService {
     }
 
     private buildContainerGroupInstance(container: formattingSettings.Container, containerUid: string, objectName: string, sliceNames: { [name: string]: number }): visuals.FormattingContainer {
-        const formattingContainer: visuals.FormattingContainer = {
-            displayName: getLocalizedProperty(container, "displayName", this.localizationManager),
-            description: getLocalizedProperty(container, "description", this.localizationManager),
+        const formattingContainer: visuals.FormattingContainer & { containerItems: visuals.FormattingContainerItem[] } = {
+            displayName: getLocalizedProperty(container, "displayName", this.localizationManager) ?? "",
+            description: getLocalizedProperty(container, "description", this.localizationManager) ?? "",
             containerItems: [],
             uid: containerUid
-        }
+        };
 
         container.containerItems.filter(({visible = true}) => visible).forEach((containerItem: formattingSettings.ContainerItem) => {
             if(!containerItem) { // This is to prevent error when container item is null or undefined
@@ -151,23 +151,23 @@ export class FormattingSettingsService implements IFormattingSettingsService {
             // Build formatting container item object
             const containerIemName = containerItem.displayNameKey ? containerItem.displayNameKey : containerItem.displayName;
             const containerItemUid: string = containerUid + containerIemName;
-            const formattingContainerItem: visuals.FormattingContainerItem = {
-                displayName: getLocalizedProperty(containerItem, "displayName", this.localizationManager),
+            const formattingContainerItem: visuals.FormattingContainerItem & { slices: visuals.FormattingSlice[]; groups: visuals.FormattingGroup[] } = {
+                displayName: getLocalizedProperty(containerItem, "displayName", this.localizationManager) ?? containerIemName ?? "",
                 slices: [],
                 groups: [],
                 uid: containerItemUid   
-            }
+            };
             // Build formatting slices and add them to current formatting container item
             if(containerItem.slices) {
-                this.buildFormattingSlices({slices: containerItem.slices, objectName, sliceNames, formattingSlices: formattingContainerItem.slices});
+                this.buildFormattingSlices({slices: containerItem.slices ?? [], objectName, sliceNames, formattingSlices: formattingContainerItem.slices});
             }
             // Build formatting groups and add them to current formatting container item
             if(containerItem.groups) {
                 containerItem.groups.forEach((group: formattingSettings.Group) => {
                     const groupSlices: visuals.FormattingGroup = {
-                        displayName: getLocalizedProperty(group, "displayName", this.localizationManager),
-                        description: getLocalizedProperty(group, "description", this.localizationManager),
-                        slices: [],
+                        displayName: getLocalizedProperty(group, "displayName", this.localizationManager) ?? "",
+                        description: getLocalizedProperty(group, "description", this.localizationManager) ?? "",
+                        slices: [] as visuals.FormattingSlice[],
                         uid: group.name + "-container-group",
                         collapsible: group.collapsible,
                         delaySaveSlices: group.delaySaveSlices,
@@ -175,7 +175,7 @@ export class FormattingSettingsService implements IFormattingSettingsService {
                         disabledReason: getLocalizedProperty(group, "disabledReason", this.localizationManager)
                     };
                     this.setTopLevelToggleSliceClone(group, groupSlices, objectName);
-                    this.buildFormattingSlices({slices: group.slices, objectName, sliceNames, formattingSlices: groupSlices.slices as visuals.FormattingSlice[]});
+                    this.buildFormattingSlices({slices: group.slices ?? [], objectName, sliceNames, formattingSlices: groupSlices.slices as visuals.FormattingSlice[]});
                     formattingContainerItem.groups.push(groupSlices);
                 });
             }
@@ -218,15 +218,15 @@ export class FormattingSettingsService implements IFormattingSettingsService {
             [ card ].filter(({visible = true}) => visible) : 
             card.groups.filter(({visible = true}) => visible));
         cardGroupInstances?.forEach((cardGroupInstance: CardGroupEntity) => {
-            cardSlicesDefaultDescriptors = this.getSlicesRevertToDefaultDescriptor(card.name, cardGroupInstance.slices, sliceNames, cardGroupInstance.topLevelSlice);
+            cardSlicesDefaultDescriptors = this.getSlicesRevertToDefaultDescriptor(card.name, cardGroupInstance.slices ?? [], sliceNames, cardGroupInstance.topLevelSlice);
 
             cardGroupInstance.container?.containerItems?.forEach((containerItem: formattingSettings.ContainerItem) => {
                 cardContainerSlicesDefaultDescriptors = cardContainerSlicesDefaultDescriptors.concat(
-                    this.getSlicesRevertToDefaultDescriptor(card.name, containerItem.slices, sliceNames)
+                    this.getSlicesRevertToDefaultDescriptor(card.name, containerItem.slices ?? [], sliceNames)
                 )
                 containerItem.groups?.forEach((group: formattingSettings.Group) => {
                     cardContainerSlicesDefaultDescriptors = cardContainerSlicesDefaultDescriptors.concat(
-                        this.getSlicesRevertToDefaultDescriptor(card.name, group.slices, sliceNames)
+                        this.getSlicesRevertToDefaultDescriptor(card.name, group.slices ?? [], sliceNames)
                     )
                 });
             });
