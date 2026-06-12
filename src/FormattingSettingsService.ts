@@ -104,8 +104,8 @@ export class FormattingSettingsService implements IFormattingSettingsService {
 
         // Build formatting group for each group
         const formattingGroup: visuals.FormattingGroup = {
-            displayName: isSimpleCard ? formattingCard.displayName : getLocalizedProperty(cardGroupInstance, "displayName", this.localizationManager) ?? cardGroupInstance.name,
-            description: isSimpleCard ? "" : getLocalizedProperty(cardGroupInstance, "description", this.localizationManager) ?? "",
+            displayName: (isSimpleCard ? undefined : (getLocalizedProperty(cardGroupInstance, "displayName", this.localizationManager) ?? cardGroupInstance.name)) as string,
+            description: (isSimpleCard ? undefined : (getLocalizedProperty(cardGroupInstance, "description", this.localizationManager) ?? "")) as string,
             slices: [] as visuals.FormattingSlice[],
             uid: groupUid,
             collapsible: cardGroupInstance.collapsible,

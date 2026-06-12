@@ -1,5 +1,9 @@
 ## 7.0.0
 
+### Breaking
+* `getLocalizedProperty<T>(...)` now returns `string | undefined` instead of `string`; callers should handle the `undefined` case.
+* `NamedEntity` now includes an index signature `[property: string]: unknown` to support strict-mode property access; dynamic index access in subclasses now yields `unknown` instead of `any`.
+
 ### Changed
 * Updated `powerbi-visuals-api` to `^5.11.0`.
 * Enabled full TypeScript strict checks (`strictNullChecks`, `strictPropertyInitialization`, `noImplicitAny`) and fixed related type issues.
