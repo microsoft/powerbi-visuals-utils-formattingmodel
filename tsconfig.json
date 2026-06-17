@@ -7,14 +7,10 @@
       "sourceMap": true,
       "module": "preserve",
       "moduleResolution": "bundler",
-      "ignoreDeprecations": "6.0",
       "target": "ES2022",
       "strict": true,
-      "strictNullChecks": true,
-      "strictPropertyInitialization": true,
-      "noImplicitAny": true,
-      "forceConsistentCasingInFileNames": true,
       "noEmitOnError": true,
+      "declarationMap": true,
       // Required due to type errors in powerbi-visuals-api declarations. Can be removed once they are fixed upstream.
       "skipLibCheck": true,
       "lib": [
