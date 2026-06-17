@@ -5,19 +5,22 @@
       "experimentalDecorators": true,
       "declaration": true,
       "sourceMap": true,
-      "module": "ES2015",
-      "moduleResolution": "node",
-      "target": "ES2015",
+      "module": "preserve",
+      "moduleResolution": "bundler",
+      "target": "ES2022",
+      "strict": true,
+      "noEmitOnError": true,
+      "declarationMap": true,
+      // Required due to type errors in powerbi-visuals-api declarations. Can be removed once they are fixed upstream.
+      "skipLibCheck": true,
       "lib": [
-          "es2015",
+          "es2022",
           "dom"
       ],
+      "rootDir": "./src",
       "outDir": "./lib"
   },
-  "files": [
-      "src/index.ts"
-  ],
   "include": [
-      "src/index.ts"
+      "src/**/*.ts"
   ]
 }

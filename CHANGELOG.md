@@ -1,3 +1,19 @@
+## 7.0.0
+
+### Breaking
+* `getLocalizedProperty<T>(...)` now returns `string | undefined` instead of `string`; callers should handle the `undefined` case.
+* `NamedEntity` now includes an index signature `[property: string]: unknown` to support strict-mode property access; dynamic index access in subclasses now yields `unknown` instead of `any`.
+
+### Changed
+* Updated `powerbi-visuals-api` to `^5.11.0`.
+* Enabled full TypeScript strict checks (`strictNullChecks`, `strictPropertyInitialization`, `noImplicitAny`) and fixed related type issues.
+* Preserved formatting pane behavior for SimpleCard top-level toggle placement during strict-mode refactoring.
+
+### Infrastructure
+* Migrated ESLint config to flat-config ESM `eslint.config.mjs`.
+* Removed legacy `.eslintrc.js` and `.eslintignore` in favor of flat-config equivalents.
+* Updated the lint stack to ESLint 10 with TypeScript ESLint 8.
+* Pinned `typescript` as a direct devDependency and updated TypeScript config for TS6 compatibility.
 
 ## 6.2.2
 * Added missing `disabled` property to `FontPicker`
@@ -11,7 +27,6 @@
 * *Container* card can have `Groups` inside
 * Bug with delaySaveSlices was fixed for *Container*s
 * Localization support for `AutoDropdown` and `ItemFlagsSelection`
-
 
 ## 6.1.0
 * `ItemDropdown` now supports new interface `ILocalizedItemMember` for localization of dropdown items.
