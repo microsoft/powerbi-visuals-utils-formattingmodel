@@ -7,7 +7,7 @@
   "jsnext:main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "test": "echo \"No tests specified yet\"",
+    "test": "tsc -p tsconfig.test.json",
     "build": "tsc",
     "lint": "eslint ."
   },

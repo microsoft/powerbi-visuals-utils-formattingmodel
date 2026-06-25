@@ -12,7 +12,18 @@ import { getLocalizedProperty } from "./utils/FormattingSettingsUtils";
 import data = powerbi.data;
 import visuals = powerbi.visuals;
 
-/** Names of the data (non-method) properties of T. */
+/**
+ * Names of the data (non-method) properties of T.
+ *
+ * NOTE: the filter is purely structural — a property is dropped when its type is a function.
+ * Two consequences to keep in mind when adding members to a component:
+ *  - A consumer-provided callback declared as a plain function (e.g. `onChange?: () => void`)
+ *    would be dropped here too. If such a field is ever needed in the init object, add it back
+ *    explicitly (e.g. `Pick<T, NonFunctionPropertyNames<T>> & Pick<T, "onChange">`).
+ *  - Component methods must stay required. An optional method (`method?()`) has type
+ *    `(() => ...) | undefined`, which does NOT match the function check, so it would leak in
+ *    as if it were a data property.
+ */
 type NonFunctionPropertyNames<T> = {
     [K in keyof T]: T[K] extends (...args: any[]) => any ? never : K
 }[keyof T];

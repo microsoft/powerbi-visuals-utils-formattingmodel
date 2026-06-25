@@ -12,7 +12,7 @@ export default [
         languageOptions: {
             ...powerbiVisuals.configs.recommended.languageOptions,
             parserOptions: {
-                project: "tsconfig.json",
+                project: "tsconfig.test.json",
                 tsconfigRootDir: import.meta.dirname,
             },
         },
