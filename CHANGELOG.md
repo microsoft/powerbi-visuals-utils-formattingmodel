@@ -1,13 +1,21 @@
+## 7.0.1
+
+### Fixed
+* Restored object-literal initialization of slice components (e.g. `new ToggleSwitch({...})`, `new ItemDropdown({...})`). The strict-mode refactor in `7.0.0` made the slice methods required, which broke the documented initialization pattern. Constructor inputs now use the new `SliceInit<T>` type (data properties only; all methods are excluded automatically), and `IFormattingSettingsSlice.getFormattingComponent` is optional again.
+* Removed the `[property: string]: unknown` index signature from `NamedEntity` (added in `7.0.0`). It silently disabled excess-property checking and weakened consumer typing. The single dynamic lookup in `getLocalizedProperty` is now handled with a localized cast instead. Object literals are type-checked precisely again (typos and missing required fields are reported).
+* Restored formatting pane card/group/container headers: `displayName`/`description` are no longer coerced to the internal object `name` or an empty string. When unset, `undefined` is passed through again so the host falls back to the capabilities-defined display name.
+
 ## 7.0.0
 
 ### Breaking
 * `getLocalizedProperty<T>(...)` now returns `string | undefined` instead of `string`; callers should handle the `undefined` case.
-* `NamedEntity` now includes an index signature `[property: string]: unknown` to support strict-mode property access; dynamic index access in subclasses now yields `unknown` instead of `any`.
+* `NamedEntity` now includes an index signature `[property: string]: unknown` to support strict-mode property access; dynamic index access in subclasses now yields `unknown` instead of `any`. This was identified as a regression (it disabled excess-property checking) and is reverted in `7.0.1`.
+* Methods `getFormattingSlice`, `getFormattingComponent`, `getRevertToDefaultDescriptor` and `setPropertiesValues` on `SimpleSlice`/`IFormattingSettingsSlice` were changed from optional to required. This was identified as a regression — it broke object-literal initialization of components such as `ToggleSwitch` and `ItemDropdown` — and is reverted in `7.0.1`.
 
 ### Changed
 * Updated `powerbi-visuals-api` to `^5.11.0`.
 * Enabled full TypeScript strict checks (`strictNullChecks`, `strictPropertyInitialization`, `noImplicitAny`) and fixed related type issues.
-* Preserved formatting pane behavior for SimpleCard top-level toggle placement during strict-mode refactoring.
+* Refactored SimpleCard top-level toggle placement to use an explicit `isSimpleCard` check.
 
 ### Infrastructure
 * Migrated ESLint config to flat-config ESM `eslint.config.mjs`.
