@@ -39,7 +39,7 @@ export interface IFormattingSettingsSlice {
      * @param objectName Capabilities object name that contain this slice property
      * @returns simple or composite formatting component 
      */
-    getFormattingComponent(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleComponentBase<any> | visuals.CompositeComponentPropertyType;
+    getFormattingComponent?(objectName: string, localizationManager?: powerbi.extensibility.ILocalizationManager): visuals.SimpleComponentBase<any> | visuals.CompositeComponentPropertyType;
 
     /**
      * Return array of formatting properties default descriptors

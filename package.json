@@ -1,13 +1,19 @@
 {
   "name": "powerbi-visuals-utils-formattingmodel",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "description": "",
   "main": "lib/index.js",
   "module": "lib/index.js",
   "jsnext:main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "src"
+  ],
   "scripts": {
-    "test": "echo \"No tests specified yet\"",
+    "test": "npm run test:types && npm run test:unit",
+    "test:types": "tsc -p tsconfig.test.json",
+    "test:unit": "vitest run",
     "build": "tsc",
     "lint": "eslint ."
   },
@@ -17,10 +23,12 @@
     "powerbi-visuals-api": "^5.11.0"
   },
   "devDependencies": {
+    "@types/node": "^26.0.1",
     "@typescript-eslint/eslint-plugin": "^8.60.1",
     "@typescript-eslint/parser": "^8.60.1",
     "eslint": "^10.4.1",
     "eslint-plugin-powerbi-visuals": "^1.1.1",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   }
 }

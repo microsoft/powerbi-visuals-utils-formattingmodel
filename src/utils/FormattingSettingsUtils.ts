@@ -47,5 +47,9 @@ export function getPropertyValue(slice: SimpleSlice, value: any, defaultValue: a
 }
     
 export function getLocalizedProperty<T extends NamedEntity>(item: T, property: keyof T, localizationManager?: powerbi.extensibility.ILocalizationManager): string | undefined {
-    return (localizationManager && item[property.toString() + "Key"]) ? localizationManager.getDisplayName(item[property.toString() + "Key"] as string) : item[property]?.toString();
+    // The "<property>Key" companion field is resolved dynamically, so index it through a string-record view.
+    const localizationKey = (item as Record<string, unknown>)[property.toString() + "Key"];
+    return (localizationManager && localizationKey)
+        ? localizationManager.getDisplayName(localizationKey as string)
+        : item[property]?.toString();
 }

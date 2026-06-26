@@ -1,13 +1,26 @@
+## 7.1.0
+
+### Fixed
+* Object-literal initialization of components (e.g. `new ToggleSwitch({...})`, `new ItemDropdown({...})`) compiles again — the `7.0.0` strict-mode refactor had broken the documented pattern.
+* Component initializers are type-checked precisely again (typos and missing required fields are reported).
+* Card and group headers no longer show the internal object name when `displayName` is unset; the host fallback is preserved.
+* Components no longer lose their data at runtime (e.g. empty `ItemDropdown` items, unusable `FontControl`/`MarginPadding`) — a `7.0.0` regression that could throw.
+
+### Added
+* Test suite (type and runtime tests) covering the initialization contract and `FormattingSettingsService`.
+
 ## 7.0.0
 
 ### Breaking
 * `getLocalizedProperty<T>(...)` now returns `string | undefined` instead of `string`; callers should handle the `undefined` case.
-* `NamedEntity` now includes an index signature `[property: string]: unknown` to support strict-mode property access; dynamic index access in subclasses now yields `unknown` instead of `any`.
+* `NamedEntity` gained an index signature `[property: string]: unknown`. *(Reverted in 7.1.0.)*
+* The slice methods (`getFormattingSlice`, `getFormattingComponent`, `getRevertToDefaultDescriptor`, `setPropertiesValues`) were made required. *(Reverted in 7.1.0 — it broke object-literal initialization.)*
 
 ### Changed
 * Updated `powerbi-visuals-api` to `^5.11.0`.
-* Enabled full TypeScript strict checks (`strictNullChecks`, `strictPropertyInitialization`, `noImplicitAny`) and fixed related type issues.
-* Preserved formatting pane behavior for SimpleCard top-level toggle placement during strict-mode refactoring.
+* Enabled full TypeScript strict checks and fixed related type issues.
+* Refactored SimpleCard top-level toggle placement to use an explicit `isSimpleCard` check.
+* Changed the compilation `target` to `ES2022`. *(Implicitly enabled `useDefineForClassFields`; reverted in 7.1.0.)*
 
 ### Infrastructure
 * Migrated ESLint config to flat-config ESM `eslint.config.mjs`.
