@@ -1,26 +1,26 @@
 ## 7.1.0
 
 ### Fixed
-* Restored object-literal initialization of slice components (e.g. `new ToggleSwitch({...})`, `new ItemDropdown({...})`). The strict-mode refactor in `7.0.0` made the slice methods required, which broke the documented initialization pattern. Constructor inputs now use the new `SliceInit<T>` type (data properties only; all methods are excluded automatically), and `IFormattingSettingsSlice.getFormattingComponent` is optional again.
-* Removed the `[property: string]: unknown` index signature from `NamedEntity` (added in `7.0.0`). It silently disabled excess-property checking and weakened consumer typing. The single dynamic lookup in `getLocalizedProperty` is now handled with a localized cast instead. Object literals are type-checked precisely again (typos and missing required fields are reported).
-* Restored formatting pane card/group/container headers: `displayName`/`description` are no longer coerced to the internal object `name` or an empty string. When unset, `undefined` is passed through again so the host falls back to the capabilities-defined display name.
-* Set `useDefineForClassFields: false`. The `7.0.0` target bump to ES2022 flipped the TypeScript default to `true`, which made subclass field declarations (e.g. `items`, `fontFamily`, `mode`, `placeholder`) reset to `undefined` after the base constructor's `Object.assign`. This broke components such as `ItemDropdown` (empty `items`), `FontControl` and `MarginPadding` at runtime.
+* Object-literal initialization of components (e.g. `new ToggleSwitch({...})`, `new ItemDropdown({...})`) compiles again — the `7.0.0` strict-mode refactor had broken the documented pattern.
+* Component initializers are type-checked precisely again (typos and missing required fields are reported).
+* Card and group headers no longer show the internal object name when `displayName` is unset; the host fallback is preserved.
+* Components no longer lose their data at runtime (e.g. empty `ItemDropdown` items, unusable `FontControl`/`MarginPadding`) — a `7.0.0` regression that could throw.
 
 ### Added
-* Test suite (not published to npm): compile-time type tests for the component initialization contract (`tsc`) and Vitest runtime tests for `FormattingSettingsService`. Both run via `npm test` and gate CI. See `test/README.md`.
+* Test suite (type and runtime tests) covering the initialization contract and `FormattingSettingsService`.
 
 ## 7.0.0
 
 ### Breaking
 * `getLocalizedProperty<T>(...)` now returns `string | undefined` instead of `string`; callers should handle the `undefined` case.
-* `NamedEntity` now includes an index signature `[property: string]: unknown` to support strict-mode property access; dynamic index access in subclasses now yields `unknown` instead of `any`. This was identified as a regression (it disabled excess-property checking) and is reverted in `7.1.0`.
-* Methods `getFormattingSlice`, `getFormattingComponent`, `getRevertToDefaultDescriptor` and `setPropertiesValues` on `SimpleSlice`/`IFormattingSettingsSlice` were changed from optional to required. This was identified as a regression — it broke object-literal initialization of components such as `ToggleSwitch` and `ItemDropdown` — and is reverted in `7.1.0`.
+* `NamedEntity` gained an index signature `[property: string]: unknown`. *(Reverted in 7.1.0.)*
+* The slice methods (`getFormattingSlice`, `getFormattingComponent`, `getRevertToDefaultDescriptor`, `setPropertiesValues`) were made required. *(Reverted in 7.1.0 — it broke object-literal initialization.)*
 
 ### Changed
 * Updated `powerbi-visuals-api` to `^5.11.0`.
-* Enabled full TypeScript strict checks (`strictNullChecks`, `strictPropertyInitialization`, `noImplicitAny`) and fixed related type issues.
+* Enabled full TypeScript strict checks and fixed related type issues.
 * Refactored SimpleCard top-level toggle placement to use an explicit `isSimpleCard` check.
-* Changed the compilation `target` to `ES2022`. This implicitly enabled `useDefineForClassFields`, which reset `Object.assign`-populated subclass fields to `undefined` — identified as a regression and reverted in `7.1.0`.
+* Changed the compilation `target` to `ES2022`. *(Implicitly enabled `useDefineForClassFields`; reverted in 7.1.0.)*
 
 ### Infrastructure
 * Migrated ESLint config to flat-config ESM `eslint.config.mjs`.
