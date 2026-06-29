@@ -9,6 +9,9 @@
 ### Added
 * Test suite (type and runtime tests) covering the initialization contract and `FormattingSettingsService`.
 
+### Breaking changes
+* Components must be created via their constructor (`new ColorPicker({...})`, `new ItemDropdown({...})`), not assigned as bare object literals — the slice methods are required, so a plain `{...}` no longer satisfies the component type. This was loosely accepted in `6.x` and is now enforced; wrap any such literals in `new` when upgrading.
+
 ## 7.0.0
 
 ### Breaking

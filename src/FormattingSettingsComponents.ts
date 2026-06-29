@@ -33,6 +33,10 @@ type NonFunctionPropertyNames<T> = {
  * Every function-typed member (the formatting methods implemented by the component classes)
  * is excluded automatically, so object-literal initialization works (e.g. new ToggleSwitch({ ... }))
  * and the type stays correct as components add or change methods — no method names are hard-coded.
+ *
+ * Components must be created with `new` — a bare object literal does not satisfy the component
+ * type because the slice methods are required. Wrap initializers in the constructor:
+ * `new ColorPicker({ ... })`, not `{ ... }`.
  */
 export type SliceInit<T> = Pick<T, NonFunctionPropertyNames<T>>;
 
@@ -210,6 +214,7 @@ export class AlignmentGroup extends SimpleSlice<string> {
 export class ToggleSwitch extends SimpleSlice<boolean> {
     type?= visuals.FormattingComponent.ToggleSwitch;
 
+    /** @example new ToggleSwitch({ name: "show", value: false }) — use the constructor, not a bare `{ ... }` literal. */
     constructor(object: SliceInit<ToggleSwitch>) {
         super(object);
     }
@@ -221,6 +226,7 @@ export class ColorPicker extends SimpleSlice<powerbi.ThemeColorData> {
 
     type?= visuals.FormattingComponent.ColorPicker;
 
+    /** @example new ColorPicker({ name: "fill", value: { value: "#000" } }) — use the constructor, not a bare `{ ... }` literal. */
     constructor(object: SliceInit<ColorPicker>) {
         super(object);
     }
@@ -239,6 +245,7 @@ export class NumUpDown extends SimpleSlice<number> {
 
     type?= visuals.FormattingComponent.NumUpDown;
 
+    /** @example new NumUpDown({ name: "width", value: 10 }) — use the constructor, not a bare `{ ... }` literal. */
     constructor(object: SliceInit<NumUpDown>) {
         super(object);
     }
@@ -283,6 +290,7 @@ export class ItemDropdown extends SimpleSlice<powerbi.IEnumMember | ILocalizedIt
 
     type?= visuals.FormattingComponent.Dropdown;
 
+    /** @example new ItemDropdown({ name: "shape", items: [], value: { value: null, displayName: "" } }) — use the constructor, not a bare `{ ... }` literal. */
     constructor(object: SliceInit<ItemDropdown>) {
         super(object);
     }
