@@ -9,6 +9,10 @@
       "moduleResolution": "bundler",
       "target": "ES2022",
       "strict": true,
+      // Components are populated via `Object.assign(this, object)` in base constructors; with the
+      // ES2022 default (`true`) subclass field declarations would re-run after super() and reset
+      // those values to undefined. Keep the pre-ES2022 ("set") semantics so assigned values survive.
+      "useDefineForClassFields": false,
       "noEmitOnError": true,
       "declarationMap": true,
       // Required due to type errors in powerbi-visuals-api declarations. Can be removed once they are fixed upstream.

@@ -12,9 +12,35 @@ import { getLocalizedProperty } from "./utils/FormattingSettingsUtils";
 import data = powerbi.data;
 import visuals = powerbi.visuals;
 
-export class NamedEntity {
-    [property: string]: unknown;
+/**
+ * Names of the data (non-method) properties of T.
+ *
+ * NOTE: the filter is purely structural — a property is dropped when its type is a function.
+ * Two consequences to keep in mind when adding members to a component:
+ *  - A consumer-provided callback declared as a plain function (e.g. `onChange?: () => void`)
+ *    would be dropped here too. If such a field is ever needed in the init object, add it back
+ *    explicitly (e.g. `Pick<T, NonFunctionPropertyNames<T>> & Pick<T, "onChange">`).
+ *  - Component methods must stay required. An optional method (`method?()`) has type
+ *    `(() => ...) | undefined`, which does NOT match the function check, so it would leak in
+ *    as if it were a data property.
+ */
+type NonFunctionPropertyNames<T> = {
+    [K in keyof T]: T[K] extends (...args: any[]) => any ? never : K
+}[keyof T];
 
+/**
+ * Initialization object for slice components: data properties only.
+ * Every function-typed member (the formatting methods implemented by the component classes)
+ * is excluded automatically, so object-literal initialization works (e.g. new ToggleSwitch({ ... }))
+ * and the type stays correct as components add or change methods — no method names are hard-coded.
+ *
+ * Components must be created with `new` — a bare object literal does not satisfy the component
+ * type because the slice methods are required. Wrap initializers in the constructor:
+ * `new ColorPicker({ ... })`, not `{ ... }`.
+ */
+export type SliceInit<T> = Pick<T, NonFunctionPropertyNames<T>>;
+
+export class NamedEntity {
     displayName?: string;
     displayNameKey?: string;
     description?: string;
@@ -113,7 +139,7 @@ export abstract class SimpleSlice<T = any> extends NamedEntity implements IForma
     /** type declared in each slice sub class, No need to declare it in initializing object */
     type?: visuals.FormattingComponent;
 
-    constructor(object: SimpleSlice<any>) {
+    constructor(object: SliceInit<SimpleSlice<any>>) {
         super();
         Object.assign(this, object);
     }
@@ -172,7 +198,7 @@ export class AlignmentGroup extends SimpleSlice<string> {
 
     type?= visuals.FormattingComponent.AlignmentGroup;
 
-    constructor(object: AlignmentGroup) {
+    constructor(object: SliceInit<AlignmentGroup>) {
         super(object);
     }
 
@@ -188,7 +214,8 @@ export class AlignmentGroup extends SimpleSlice<string> {
 export class ToggleSwitch extends SimpleSlice<boolean> {
     type?= visuals.FormattingComponent.ToggleSwitch;
 
-    constructor(object: ToggleSwitch) {
+    /** @example new ToggleSwitch({ name: "show", value: false }) — use the constructor, not a bare `{ ... }` literal. */
+    constructor(object: SliceInit<ToggleSwitch>) {
         super(object);
     }
 }
@@ -199,7 +226,8 @@ export class ColorPicker extends SimpleSlice<powerbi.ThemeColorData> {
 
     type?= visuals.FormattingComponent.ColorPicker;
 
-    constructor(object: ColorPicker) {
+    /** @example new ColorPicker({ name: "fill", value: { value: "#000" } }) — use the constructor, not a bare `{ ... }` literal. */
+    constructor(object: SliceInit<ColorPicker>) {
         super(object);
     }
 
@@ -217,7 +245,8 @@ export class NumUpDown extends SimpleSlice<number> {
 
     type?= visuals.FormattingComponent.NumUpDown;
 
-    constructor(object: NumUpDown) {
+    /** @example new NumUpDown({ name: "width", value: 10 }) — use the constructor, not a bare `{ ... }` literal. */
+    constructor(object: SliceInit<NumUpDown>) {
         super(object);
     }
 
@@ -243,7 +272,7 @@ export class DatePicker extends SimpleSlice<Date> {
 
     type?= visuals.FormattingComponent.DatePicker;
 
-    constructor(object: DatePicker) {
+    constructor(object: SliceInit<DatePicker>) {
         super(object);
     }
 
@@ -261,7 +290,8 @@ export class ItemDropdown extends SimpleSlice<powerbi.IEnumMember | ILocalizedIt
 
     type?= visuals.FormattingComponent.Dropdown;
 
-    constructor(object: ItemDropdown) {
+    /** @example new ItemDropdown({ name: "shape", items: [], value: { value: null, displayName: "" } }) — use the constructor, not a bare `{ ... }` literal. */
+    constructor(object: SliceInit<ItemDropdown>) {
         super(object);
     }
 
@@ -293,7 +323,7 @@ export class AutoDropdown extends SimpleSlice<powerbi.EnumMemberValue> {
 
     type?= visuals.FormattingComponent.Dropdown;
 
-    constructor(object: AutoDropdown) {
+    constructor(object: SliceInit<AutoDropdown>) {
         super(object);
     }
 
@@ -324,7 +354,7 @@ export class DurationPicker extends SimpleSlice<string> {
 
     type?= visuals.FormattingComponent.DurationPicker;
 
-    constructor(object: DurationPicker) {
+    constructor(object: SliceInit<DurationPicker>) {
         super(object);
     }
 
@@ -341,7 +371,7 @@ export class ErrorRangeControl extends SimpleSlice<undefined> {
 
     type?= visuals.FormattingComponent.ErrorRangeControl;
 
-    constructor(object: ErrorRangeControl) {
+    constructor(object: SliceInit<ErrorRangeControl>) {
         super(object);
     }
 
@@ -359,7 +389,7 @@ export class FieldPicker extends SimpleSlice<data.ISQExpr[]> {
 
     type?= visuals.FormattingComponent.FieldPicker;
 
-    constructor(object: FieldPicker) {
+    constructor(object: SliceInit<FieldPicker>) {
         super(object);
     }
 
@@ -387,7 +417,7 @@ export class ItemFlagsSelection extends SimpleSlice<number> {
 
     type?= visuals.FormattingComponent.FlagsSelection;
 
-    constructor(object: ItemFlagsSelection) {
+    constructor(object: SliceInit<ItemFlagsSelection>) {
         super(object);
     }
 
@@ -428,7 +458,7 @@ export class TextInput extends SimpleSlice<string> {
 
     type?= visuals.FormattingComponent.TextInput;
 
-    constructor(object: TextInput) {
+    constructor(object: SliceInit<TextInput>) {
         super(object);
     }
 
@@ -469,7 +499,7 @@ export class ShapeMapSelector extends SimpleSlice<powerbi.GeoJson> {
 
     type?= visuals.FormattingComponent.ShapeMapSelector;
 
-    constructor(object: ShapeMapSelector) {
+    constructor(object: SliceInit<ShapeMapSelector>) {
         super(object);
     }
 
@@ -493,7 +523,7 @@ export abstract class CompositeSlice extends NamedEntity implements IFormattingS
 
     visible?: boolean;
 
-    constructor(object: CompositeSlice) {
+    constructor(object: SliceInit<CompositeSlice>) {
         super();
         Object.assign(this, object);
     }
@@ -533,7 +563,7 @@ export class FontControl extends CompositeSlice {
 
     type?= visuals.FormattingComponent.FontControl;
 
-    constructor(object: FontControl) {
+    constructor(object: SliceInit<FontControl>) {
         super(object);
     }
 
@@ -572,7 +602,7 @@ export class MarginPadding extends CompositeSlice {
 
     type?= visuals.FormattingComponent.MarginPadding;
 
-    constructor(object: MarginPadding) {
+    constructor(object: SliceInit<MarginPadding>) {
         super(object);
     }
 
@@ -602,7 +632,7 @@ export class MarginPadding extends CompositeSlice {
 
 
 export class Container extends NamedEntity {
-    constructor(object: Container) {
+    constructor(object: SliceInit<Container>) {
         super();
         Object.assign(this, object);
     }
